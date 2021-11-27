@@ -1,0 +1,36 @@
+Lectura de productos de Carpeta Lote:
+
+Variables:
+- diccionario_productos
+- lista_productos_archivo
+- ruta = "/TP_Arch_config/Lote0001"
+
+1) determinar_lote(diccionario_productos)->None
+	- Llamada principal que comienza la determinacion de productos en el lote, no devuelve nada
+	- Recibe diccionario_productos por parametro para modificar su contenido cuando se procesen los productos
+ 
+1.a) recuperar_productos(ruta)->list: 
+	- Acceder a carpeta -> import OS -> os.listdir(ruta) 
+	- Retorna lista de archivos dentro de la carpeta y se asigna a lista_productos_archivo
+
+1.b) categorizar_archivos(ruta, lista_productos_archivo, diccionario_productos)->dict
+	- reconocer objetos con yolo, recuperar imagen con opencv, identificar colores con rgh hsv colors ( ??????????? )
+	- en base a las imagenes, se debe procesar si es botella, vaso o animal ( ?????? ) 
+	- identificar botella/vaso y color, dichos valores se usaran para validar que articulo actualizar en el diccionario ( ???????? )
+	- se construye diccionario segun si es botella/vaso o color (segun botella o vaso, se contemplan menos colores):
+		diccionario_productos[key_articulo] = {
+							precio: float,
+							peso: float,
+							color: {
+								verde: int,
+								rojo: int,
+								azul: int,
+								negro: int,
+								amarillo: int
+								}
+							
+							}
+							
+	
+
+
