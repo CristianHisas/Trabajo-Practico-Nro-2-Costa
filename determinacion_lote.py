@@ -215,13 +215,37 @@ def determinar_lote(productos: dict)->None:
     categorizar_archivos(productos, productos_archivos)
 
 
+# Punto 7) Archivo botellas.txt y vasos.txt
+def generar_archivos(productos: dict)->None:
+    color_botellas: dict = productos[1334]["color"]
+    color_vasos: dict = productos[568]["color"]
+
+    archivo_botellas = open("botellas.txt", "w")
+    for color in range(len(color_botellas)):
+        nombre_color: str = list(color_botellas.keys())[color]
+        valor_color: str = list(color_botellas.values())[color]
+        archivo_botellas.write(f"{nombre_color.capitalize()}: {valor_color} \n")
+    archivo_botellas.close()
+
+    archivo_vasos = open("vasos.txt", "w")
+    for color in range(len(color_vasos)):
+        nombre_color: str = list(color_vasos.keys())[color]
+        valor_color: str = list(color_vasos.values())[color]
+        archivo_vasos.write(f"{nombre_color.capitalize()}: {valor_color} \n")
+    archivo_vasos.close()
+
+
 def main():
     diccionario_productos: dict = {1334: {"precio": 15, "peso": 450, "color": {"verde": 0, "rojo": 0, "azul": 0, "negro": 0, "amarillo": 0}},
                                    568: {"precio": 8, "peso": 350, "color": {"azul": 0, "negro": 0}}
                                    }
 
     determinar_lote(diccionario_productos)
+    print("Diccionario con stock traidos del lote")
     print(diccionario_productos)
+    print("Generando botellas.txt y vasos.txt...")
+    generar_archivos(diccionario_productos)
+    print("Archivos generados")
 
 
 main()
