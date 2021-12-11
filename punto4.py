@@ -2,6 +2,9 @@
 # fecha (los más antiguos primero). Mostar el listado y cuántos fueron. 
 
 #Listo todos los pedidos completos desde el mas antiguo al mas reciente (indico cant de pedidos completos).
+
+import csv
+
 def listar_pedidos_completos(pedidos_terminados : dict):
     print(f"Pedidos completados: {len(pedidos_terminados)}")
     for numero, pedidos in pedidos_terminados.items():
@@ -46,24 +49,31 @@ def separar_fechas(pedidos_terminados : dict, pedidos_fechas_separada : dict):
 
     return pedidos_fechas_separada
 
+#leo el csv y comparo con la lista de ids de pedidos completados que obtengo de la funcion hacer_camiones()
+def leer_csv(pedidos_procesados : dict, pedidos_que_salen : list):
+    with open("TP2\TP_Archivos_de_Configuración/pedidos.csv", newline="", encoding="UTF-8") as archivo_csv:
+        csv_reader = csv.reader(archivo_csv, delimiter=",")
+        next(csv_reader)
+        for row in csv_reader:
+            if((row[0] not in pedidos_procesados.keys()) and (row[0] in pedidos_que_salen)):
+                pedidos_procesados[row[0]] = [row[1], row[2], row[3], row[4], [[row[5],row[6],row[7],row[8]]]]
+            elif((row[0] in pedidos_procesados.keys()) and (row[0] in pedidos_que_salen)):
+                pedidos_procesados[row[0]][4].append([row[5],row[6],row[7],row[8]])
+        
+        return pedidos_procesados
+
 def main():
     pedidos_fechas_separada : dict = {}
     pedidos_terminados_dict : dict = {}
-    #dict de pedidos completados que utilizo como ej
-    pedidos : dict = {
-        1: ["01/11/2021","Juan Alvarez","Villa María","Córdoba",[["1334","Azul",36,5],["568","Azul",12,5]]],
-        2: ["9/2/2021","Carlos Rodriguez","Parana","Santa Fe",[["1334","Azul",36,5],["568","Azul",12,5]]],
-        3: ["02/11/2015","Juan Lopez","Santa Rosa","La Pampa",[["1334","Amarillo",12,10],["568","Azul",12,5]]],
-        4: ["19/8/2001","Juan Lopez","Santa Rosa","La Pampa",[["1334","Amarillo",12,10],["568","Azul",12,5]]],
-        5: ["02/11/2011","Juan Lopez","Santa Rosa","La Pampa",[["1334","Amarillo",12,10],["568","Azul",12,5]]],
-        6: ["12/11/2021","Juan Lopez","Santa Rosa","La Pampa",[["1334","Amarillo",12,10],["568","Azul",12,5]]],
-        7: ["12/3/2021","Juan Lopez","Santa Rosa","La Pampa",[["1334","Amarillo",12,10],["568","Azul",12,5]]],
-    }
-
-    pedidos_fechas_separada = separar_fechas(pedidos, pedidos_fechas_separada)
+    pedidos_procesados : dict = {}
+    #hacer_camiones(a) = lista_ids_pedidos
+    lista_ids_pedidos : list = ['1', '2', '3', '4', '5']
+    pedidos_procesados = leer_csv(pedidos_procesados, lista_ids_pedidos)
+    pedidos_fechas_separada = separar_fechas(pedidos_procesados, pedidos_fechas_separada)
     pedidos_terminados_dict = ordenar_pedidos_fecha(pedidos_fechas_separada)
     listar_pedidos_completos(pedidos_terminados_dict)
+    
 
 main()
 
-#lo unico que falta es saber como llega el input si es un dict con todos los pedidos o solo los terminados (ademas de saber su sintaxis)...
+#COMENTÉ hacer_camiones(a) para que no me explote el codigo, abajo esta un ejemplo de esta misma funcion (la lista que retorna esta misma) 
