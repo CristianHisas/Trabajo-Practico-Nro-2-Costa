@@ -4,7 +4,7 @@ import numpy as np
 import os
 import csv
 import time
-from geopy.geocoders import SERVICE_TO_GEOCODER, Nominatim
+from geopy.geocoders import Nominatim
 
 '''
 - Integracion de yolo con opencv 
@@ -638,7 +638,8 @@ def inicio_menu_pedidos(productos: dict)->dict:
 
 
 '''
-- Funciones para la geolocalizacion, determinacion de zona y optimizacion de recorrido optimo
+- Funciones para la geolocalizacion 
+- Determinacion de zona y optimizacion de recorrido
 '''
 
 
@@ -719,14 +720,14 @@ def distribucion_zonas(lista_ciudad: list)->tuple:
         elif -35 >= int(ciudad[1][0]) >= -40:
             zona_centro[ciudad[0]] = ciudad[1]
 
-    zona_norte = ordenar_norte(zona_norte)
-    zona_centro = ordenar_centro(zona_centro)
-    zona_sur = ordenar_sur(zona_sur)
+    lista_zona_norte: list = ordenar_norte(zona_norte)
+    lista_zona_centro: list = ordenar_centro(zona_centro)
+    lista_zona_sur: list = ordenar_sur(zona_sur)
 
-    return zona_norte, zona_centro, zona_caba, zona_sur
+    return lista_zona_norte, lista_zona_centro, zona_caba, lista_zona_sur
 
 
-def averiguar_peso(zona_norte: list, zona_centro: list, zona_caba: list, zona_sur: list, dict_pedidos: dict )->tuple:
+def averiguar_peso(zona_norte: dict, zona_centro: dict, zona_caba: list, zona_sur: dict, dict_pedidos: dict )->tuple:
     codigo_botella: str = '1334'
     codigo_vaso: str = '568'
     peso_botella: int = 450
@@ -770,7 +771,6 @@ def averiguar_peso(zona_norte: list, zona_centro: list, zona_caba: list, zona_su
     return peso_norte, peso_centro, peso_caba, peso_sur
 
 
-
 def hacer_viaje_optimo(dict_pedidos:dict,opcion: int)->list:
     ciudades: list = []
     zona_norte_ciudades : list = []
@@ -797,13 +797,13 @@ def hacer_viaje_optimo(dict_pedidos:dict,opcion: int)->list:
         return zona_sur_ciudades
 
 
-def hacer_camiones(dict_pedidos:dict)->list:
+def hacer_camiones(dict_pedidos: dict)->list:
     pedidos_que_salen: list = []
     zona_norte: dict = {}
     zona_sur: dict = {}
     zona_centro: dict = {}
     zona_caba: list = []
-    peso_zonas: list = {}
+    peso_zonas: dict = {}
     camiones_disponible: dict = {'utilitero1': 600, 'utilitero2': 1000, 'utilitero3': 500, 'utilitero4': 2000}
     ciudades: list = []
 
@@ -854,7 +854,26 @@ def escribir_txt(datos:list)->None:
             archivo.write(ciudad)
             archivo.write('\n')
 
-    archivo.close
+    archivo.close()
+
+# punto 2)
+def menu_zonas(pedidos: dict)->None:
+    condicion_menu: bool = True
+
+    while(condicion_menu):
+        print("Seleccione la zona que desea optimizar")
+        print("1- Zona Norte")
+        print("2- Zona Centro")
+        print("3- Zona CABA")
+        print("4- Zona Sur")
+        print("5- Salir")
+
+        opcion: str = input("Opcion: ")
+
+        if(not opcion.isnumeric() or int(opcion) > 5 or int(opcion) < 1):
+            print("Elija una de las opciones solicitadas")
+        elif(int(opcion) >= 1 or int(opcion) <= 4):
+            print(hacer_viaje_optimo(pedidos, opcion))
 
 
 # --- Fin de funciones de geolocalizacion y recorrido optimo --------
@@ -886,6 +905,7 @@ def main()->None:
     diccionario_productos: dict = {1334: {"precio": 15, "peso": 450, "color": {"verde": 0, "rojo": 0, "azul": 0, "negro": 0, "amarillo": 0}},
                                    568: {"precio": 8, "peso": 350, "color": {"azul": 0, "negro": 0}}
                                    }
+    # HAY QUE VERIFICAR CON GONZA
     estado_pedidos: dict = {}
     condicion_menu: bool = True
 
@@ -903,18 +923,30 @@ def main()->None:
         print("5- Determinar pedidos realizados a Rosario y valorizarlos")
         print("6- Articulo mas pedido y cual de ellos fue entregado")
         print("7- Crear archivos de vasos y botellas procesadas por color")
+        print("8- Salir")
 
         opcion: str = input("Opcion: ")
 
-        if(not opcion.isnumeric() or int(opcion) > 7 or int(opcion) < 1):
+        if(not opcion.isnumeric() or int(opcion) > 8 or int(opcion) < 1):
             print("Ingrese unicamente las opciones solicitadas dentro del menu")
         else:
             if(int(opcion) == 1):
+                # LOS PEDIDOS TIENEN QUE ESTAR SIEMPRE A MANO Y PRE-PROCESADOS, ANTES DE QUERER HACER UN ABM
                 estado_pedidos = inicio_menu_pedidos(diccionario_productos)
             elif(int(opcion) == 2):
-                print(2)
+                if(len(diccionario_pedidos) > 0):
+                    # LAS FUNCIONES DE RECORRIDO OPTIMO RECIBEN POR PARAMETRO LA RUTA DE ACCESO AL ARCHIVO DE PEDIDOS, NO EL DICT DE PEDIDOS EN SI
+                    diccionario_pedidos: dict = recoleccion_datos_ciudades()
+                    menu_zonas(diccionario_pedidos)
+                else:
+                    print("No exiten pedidos para optimizar")
             elif(int(opcion) == 3):
-                print(3)
+                if(len(diccionario_pedidos) > 0):
+                    diccionario_pedidos: dict = recoleccion_datos_ciudades()
+                    camiones: list = hacer_camiones(diccionario_pedidos)
+                    escribir_txt(camiones)
+                else:
+                    print("No existen pedidos para procesar y listar")
             elif(int(opcion) == 4):
                 print(4)
             elif(int(opcion) == 5):
@@ -923,3 +955,7 @@ def main()->None:
                 print(6)
             elif(int(opcion) == 7):
                 generar_archivos_productos(diccionario_productos)
+            else:
+                condicion_menu = False
+
+        print("Fin del programa")
