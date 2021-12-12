@@ -84,26 +84,25 @@ def separar_fechas(pedidos_terminados : dict, pedidos_fechas_separada : dict) ->
     return pedidos_fechas_separada
 
 #leo el csv y comparo con la lista de ids de pedidos completados que obtengo de la funcion hacer_camiones()
-def leer_csv(pedidos_procesados : dict, pedidos_que_salen : list) -> dict:
-    with open("TP2\TP_Archivos_de_Configuración/pedidos.csv", newline="", encoding="UTF-8") as archivo_csv:
-        csv_reader = csv.reader(archivo_csv, delimiter=",")
-        next(csv_reader)
-        for row in csv_reader:
-            if((row[0] not in pedidos_procesados.keys()) and (row[0] in pedidos_que_salen)):
-                pedidos_procesados[row[0]] = [row[1], row[2], row[3], row[4], [[row[5],row[6],row[7],row[8]]]]
-            elif((row[0] in pedidos_procesados.keys()) and (row[0] in pedidos_que_salen)):
-                pedidos_procesados[row[0]][4].append([row[5],row[6],row[7],row[8]])
-        
-        return pedidos_procesados
+def pasar_listaCsv_dict(pedidos_procesados : dict, pedidos_que_salen : list, lista_csv : list) -> dict:
+    for objeto in lista_csv:
+        if((objeto[0] not in pedidos_procesados.keys()) and (objeto[0] in pedidos_que_salen)):
+            pedidos_procesados[objeto[0]] = [objeto[1], objeto[2], objeto[3], objeto[4], [[objeto[5],objeto[6],objeto[7],objeto[8]]]]
+        elif((objeto[0] in pedidos_procesados.keys()) and (objeto[0] in pedidos_que_salen)):
+            pedidos_procesados[objeto[0]][4].append([objeto[5],objeto[6],objeto[7],objeto[8]])
+
+    return pedidos_procesados
 
 def main() -> None:
     pedidos_fechas_separada : dict = {}
     pedidos_terminados_dict : dict = {}
     pedidos_procesados : dict = {}
     pedidos_rosario : dict = {}
+    lista_csv : list = [['1', '01/11/2021', 'Juan Alvarez', 'Villa MarÃ\xada', 'CÃ³rdoba', '1334', 'Azul', '36', '5'], ['1', '01/11/2021', 'Juan Alvarez', 'Villa MarÃ\xada', 'CÃ³rdoba', '568', 'Azul', '12', '5'], ['1', '01/11/2021', 'Juan Alvarez', 'Villa MarÃ\xada', 'CÃ³rdoba', '568', 'Negro', '6', '5'], ['1', '01/11/2021', 'Juan Alvarez', 'Villa MarÃ\xada', 'CÃ³rdoba', '1334', 'Amarilla', '12', '5'], ['2', '01/11/2021', 'Carlos Rodriguez', 'Parana', 'Santa Fe', '1334', 'Rojo', '5', '0'], ['2', '01/11/2021', 'Carlos Rodriguez', 'Parana', 'Santa Fe', '1334', 'Negro', '5', '0'], ['3', '02/11/2021', 'Juan Lopez', 'Santa Rosa', 'La Pampa', '1334', 'Amarillo', '12', '10'], ['3', '02/11/2021', 'Juan Lopez', 'Santa Rosa', 'La Pampa', '1334', 'Azul', '48', '10'], ['3', '02/11/2021', 'Juan Lopez', 'Santa Rosa', 'La Pampa', '1334', 'Rojo', '48', '10'], ['3', '02/11/2021', 'Juan Lopez', 'Santa Rosa', 'La Pampa', '1334', 'Negro', '12', '10'], ['3', '02/11/2021', 'Juan Lopez', 'Santa Rosa', 'La Pampa', '568', 'Azul', '48', '10'], ['3', '02/11/2021', 'Juan Lopez', 'Santa Rosa', 'La Pampa', '568', 'Negro', '48', '10'], ['4', '02/11/2021', 'Carlos Arana', 'Bariloche', 'Rio Negro', '1334', 'Rojo', '12', '0'], ['5', '02/11/2021', 'Mario Mangiafave', 'CABA', 'Buenos Aires', '1334', 'Rojo', '60', '15'], ['5', '02/11/2021', 'Mario Mangiafave', 'CABA', 'Buenos Aires', '1334', 'Amarillo', '30', '15'], ['5', '02/11/2021', 'Mario Mangiafave', 'CABA', 'Buenos Aires', '1334', 'Azul', '48', '15'], ['6', '02/11/2001', 'Mario Mangiafave', 'CABA', 'ROsarIo', '1334', 'Azul', 
+'48', '15'], ['6', '02/11/2001', 'Mario Mangiafave', 'CABA', 'ROsarIo', '568', 'Azul', '20', '15'], ['6', '02/11/2001', 'Mario Mangiafave', 'CABA', 'ROsarIo', '1334', 'Azul', '29', '15']]
     #hacer_camiones(a) = lista_ids_pedidos
     lista_ids_pedidos : list = ['1', '2', '3', '4', '5', '6']
-    pedidos_procesados = leer_csv(pedidos_procesados, lista_ids_pedidos)
+    pedidos_procesados = pasar_listaCsv_dict(pedidos_procesados, lista_ids_pedidos, lista_csv)
     pedidos_rosario = pedidos_en_rosario(pedidos_procesados, pedidos_rosario)
     pedidos_fechas_separada = separar_fechas(pedidos_procesados, pedidos_fechas_separada)
     pedidos_terminados_dict = ordenar_pedidos_fecha(pedidos_fechas_separada)
@@ -113,4 +112,4 @@ def main() -> None:
 main()
 
 #COMENTÉ hacer_camiones(a) para que no me explote el codigo, abajo esta un ejemplo de esta misma funcion (la lista que retorna esta misma) 
-#SOLO FALTA ADAPTARLO A LAS FUNCIONES QUE ESTAN EN EL MAIN
+#lista_csv y lista_ids_pedidos son listas que uso de ejemplo para procesar pedidos. Estas son reemplazadas con las listas que obtienen de otras funciones lista_csv( parse_pedidos_csv() ) y lista_ids_pedidos( hacer_camiones() )
