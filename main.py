@@ -4,6 +4,11 @@ import numpy as np
 import os
 import csv
 import time
+import certifi
+import ssl
+import geopy
+ctx = ssl.create_default_context(cafile=certifi.where())
+geopy.geocoders.options.default_ssl_context = ctx
 from geopy.geocoders import Nominatim
 
 '''
@@ -278,7 +283,7 @@ def limpiar()->None:
 def validar_entero(opcion_min: int, opcion_max: int, opcion: str)->int:
     entero: str = input(f'ingrese {opcion}: ')
 
-    while not entero.isnumeric() or int(entero) < opcion_min or int(entero) > opcion_max:
+    while(not entero.isnumeric() or int(entero) < opcion_min or int(entero) > opcion_max):
         entero = input(f'{opcion} inválido/a, intente nuevamente: ')
 
     return int(entero)
@@ -308,7 +313,7 @@ def parse_pedidos_csv()->list:
         primera_linea: bool = True
 
         for pedido in reader:
-            if primera_linea:
+            if(primera_linea):
                 primera_linea = False
                 continue
             else:
@@ -327,11 +332,11 @@ def procesar_pedidos_csv(stock: dict, pedidos: list)->dict:
     n_pedidos_cancelados: list = []
     for pedido in pedidos:
 
-        if stock[int(pedido[5])]['color'][pedido[6].lower()] - int(pedido[7]) < 0 and not pedido in cancelados:
+        if(stock[int(pedido[5])]['color'][pedido[6].lower()] - int(pedido[7]) < 0 and not pedido in cancelados):
             cancelados.append(pedido)
             n_pedidos_cancelados.append(pedido[0])
 
-        elif pedido[0] in n_pedidos_cancelados:
+        elif(pedido[0] in n_pedidos_cancelados):
             cancelados.append(pedido)
 
         else:
@@ -353,7 +358,7 @@ def mostrar_pedidos_procesados(estado_pedidos: dict)->None:
     print(header)
 
     for pedido in validados:
-        if pedido[0] not in n_pedidos_mostrados:
+        if(pedido[0] not in n_pedidos_mostrados):
             print(f'  {pedido[0]}:     {pedido[1]}   {pedido[2]}     {pedido[3]} {pedido[4]}')
             n_pedidos_mostrados.append(pedido[0])
 
@@ -363,7 +368,7 @@ def mostrar_pedidos_procesados(estado_pedidos: dict)->None:
     print(header)
     n_pedidos_mostrados = []
     for articulo in cancelados:
-        if articulo[0] not in n_pedidos_mostrados:
+        if(articulo[0] not in n_pedidos_mostrados):
             print(f'  {articulo[0]}:     {articulo[1]}   {articulo[2]}     {articulo[3]} {articulo[4]}')
             n_pedidos_mostrados.append(articulo[0])
 
@@ -373,11 +378,11 @@ def mostrar_pedidos_procesados(estado_pedidos: dict)->None:
 def ultimo_numero_pedido(estado_pedidos: dict)->int:
     ultimo_pedido: int = 0
     for pedido in estado_pedidos['pedidos validados']:
-        if int(pedido[0]) > ultimo_pedido:
+        if(int(pedido[0]) > ultimo_pedido):
             ultimo_pedido = int(pedido[0])
 
     for articulo in estado_pedidos['pedidos cancelados']:
-        if int(articulo[0]) > ultimo_pedido:
+        if(int(articulo[0]) > ultimo_pedido):
             ultimo_pedido = int(articulo[0])
 
     return ultimo_pedido
@@ -386,7 +391,7 @@ def ultimo_numero_pedido(estado_pedidos: dict)->int:
 def validar_str(opcion)->str:
     ingrese_str: str = input(f'Ingrese {opcion}: ')
 
-    while type(ingrese_str) != str or ingrese_str == '' or ingrese_str.isdigit():
+    while(type(ingrese_str) != str or ingrese_str == '' or ingrese_str.isdigit()):
         ingrese_str = input(f'{opcion} inválido/a, intente nuevamente: ')
 
     return ingrese_str
@@ -396,26 +401,26 @@ def validar_codigo_producto()->int:
     codigo: str = input('Ingrese el codigo de producto: ')
     codigos: list = ['1334', '568']
 
-    while not codigo in codigos:
+    while(not codigo in codigos):
         codigo = input('Codigo de producto inválido, intente nuevamente: ')
 
     return int(codigo)
 
 
-def validar_color_producto(cod_producto)->str:
+def validar_color_producto(cod_producto: int)->str:
     color: str = input('Ingrese el color del producto: ')
     colores: dict = {1334: ['rojo', 'azul', 'verde', 'negro', 'amarillo'],
                      568: ['negro', 'azul']}
 
-    while color.lower() not in colores[cod_producto]:
+    while(color.lower() not in colores[cod_producto]):
         color = input('Ese color no esta disponible, intente con otro color: ')
 
     return color.lower()
 
 
-def mostrar_stock(stock: dict, cod_articulo: str)->None:
+def mostrar_stock(stock: dict, cod_articulo: int)->None:
     limpiar()
-    if cod_articulo == 1334:
+    if(cod_articulo == 1334):
         print(f"""\n\n      STOCK BOTELLAS      
   VERDE: {stock[1334]['color']['verde']}
   ROJO: {stock[1334]['color']['rojo']}
@@ -430,11 +435,11 @@ def mostrar_stock(stock: dict, cod_articulo: str)->None:
   NEGRO: {stock[568]['color']['negro']}""")
 
 
-def validar_color_stock(stock: dict, cod_articulo: str)->tuple:
+def validar_color_stock(stock: dict, cod_articulo: int)->tuple:
     color: str = validar_color_producto(cod_articulo)
     cantidad: int = validar_entero(1, 100, 'cantidaad')
 
-    while stock[cod_articulo]['color'][color] - cantidad < 0:
+    while(stock[cod_articulo]['color'][color] - cantidad < 0):
         mostrar_stock(stock, cod_articulo)
         print('\nNo hay suficiente stock en ese color')
         print('Ingrese una cantidad menor o seleccione otro color')
@@ -444,7 +449,7 @@ def validar_color_stock(stock: dict, cod_articulo: str)->tuple:
     return color, cantidad
 
 
-def ingresar_producto_a_pedido(stock, n_pedido, fecha, cliente, ciudad, provincia)->tuple:
+def ingresar_producto_a_pedido(stock: dict, n_pedido: str, fecha: str, cliente: str, ciudad: str, provincia: str)->tuple:
     pedido: list = []
     codigo_articulo: int = validar_codigo_producto()
     color, cantidad = validar_color_stock(stock, codigo_articulo)
@@ -458,13 +463,13 @@ def ingresar_producto_a_pedido(stock, n_pedido, fecha, cliente, ciudad, provinci
 def validar_opcion(opciones: list, opcion: str)->str:
     ingresar_opcion: str = input(f'Ingrese {opcion}: ')
 
-    while ingresar_opcion.lower() not in opciones:
+    while(ingresar_opcion.lower() not in opciones):
         ingresar_opcion = input(f'{opcion} inválido/a, intente nuevamente: ')
 
     return ingresar_opcion.lower()
 
 
-def ingresar_pedido(stock, estado_pedidos: dict)->tuple:
+def ingresar_pedido(stock: dict, estado_pedidos: dict)->tuple:
     ultimo_pedido: int = ultimo_numero_pedido(estado_pedidos)
 
     numero_pedido: str = str(ultimo_pedido + 1)
@@ -478,10 +483,10 @@ def ingresar_pedido(stock, estado_pedidos: dict)->tuple:
 
     seguir_agregando: bool = True
 
-    while seguir_agregando:
+    while(seguir_agregando):
         print('Desea agregar otro producto al pedido? (y/n): ')
         opcion: str = validar_opcion(['y', 'n'], 'opcion')
-        if opcion == 'n':
+        if(opcion == 'n'):
             seguir_agregando = False
             continue
 
@@ -495,7 +500,7 @@ def ingresar_pedido(stock, estado_pedidos: dict)->tuple:
 def remover_pedido_validado(n_pedido: int, estado_pedidos: dict)->dict:
     lista_actualizada: list = []
     for pedido in estado_pedidos['pedidos validados']:
-        if pedido[0] != n_pedido:
+        if(pedido[0] != n_pedido):
             lista_actualizada.append(pedido)
 
     estado_pedidos['pedidos validados'] = lista_actualizada
@@ -506,7 +511,7 @@ def remover_pedido_validado(n_pedido: int, estado_pedidos: dict)->dict:
 def remover_pedido_cancelado(n_pedido: int, estado_pedidos: dict)->dict:
     lista_actualizada: list = []
     for pedido in estado_pedidos['pedidos cancelados']:
-        if pedido[0] != n_pedido:
+        if(pedido[0] != n_pedido):
             lista_actualizada.append(pedido)
 
     estado_pedidos['pedidos cancelados'] = lista_actualizada
@@ -523,13 +528,13 @@ def rehacer_pedido(stock: dict, estado_pedidos: dict)->tuple:
 
     # tomo los datos del pedido ya registrados
     for pedido in estado_pedidos['pedidos validados']:
-        if numero_pedido == pedido[0]:
+        if(numero_pedido == pedido[0]):
             datos_pedido = pedido
             estado_pedidos = remover_pedido_validado(numero_pedido, estado_pedidos)
 
     # quito el pedido de la lista de cancelados
     for articulo in estado_pedidos['pedidos cancelados']:
-        if numero_pedido == articulo[0]:
+        if(numero_pedido == articulo[0]):
             datos_pedido = articulo
             estado_pedidos = remover_pedido_cancelado(numero_pedido, estado_pedidos)
 
@@ -542,10 +547,10 @@ def rehacer_pedido(stock: dict, estado_pedidos: dict)->tuple:
 
     seguir: bool = True
 
-    while seguir:
+    while(seguir):
         print('Desea agregar otro producto al pedido? (y/n)')
         seguir_agregando: str = validar_opcion(['y', 'n'], 'opcion')
-        if seguir_agregando == 'n':
+        if(seguir_agregando == 'n'):
             seguir = False
             continue
 
@@ -574,12 +579,12 @@ def baja_pedido(stock: dict, estado_pedidos: dict)->tuple:
 
     n_pedido_baja: str = input('Ingrese el numero del pedido a dar de baja: ')
 
-    if n_pedido_baja not in n_pedidos_validados:
+    if(n_pedido_baja not in n_pedidos_validados):
         input('No se encontro ese numero de pedido, pulse ENTER para volver al menu')
 
     else:
         for pedido in estado_pedidos['pedidos validados']:
-            if n_pedido_baja == pedido[0]:
+            if(n_pedido_baja == pedido[0]):
                 articulos_de_pedido.append(pedido)
                 estado_pedidos['pedidos cancelados'].append(pedido)
 
@@ -605,7 +610,7 @@ def actualizar_csv(estado_pedidos: dict)->None:
         writer.writerows(pedidos_validados)
 
 
-def inicio_menu_pedidos(productos: dict)->dict:
+def inicio_menu_pedidos(productos: dict,estado_pedidos: dict)->dict:
     '''
     - Actualiza el archivo .csv con los pedidos procesados y validados
     - retorna un dict con los pedidos validados y cancelados:
@@ -613,22 +618,20 @@ def inicio_menu_pedidos(productos: dict)->dict:
     '''
     stock: dict = productos
     condicion_menu: bool = True
-    pedidos_lista: list = parse_pedidos_csv()
-    estado_pedidos: dict = procesar_pedidos_csv(stock, pedidos_lista)
     mostrar_pedidos_procesados(estado_pedidos)
 
     while(condicion_menu):
         opcion: int = menu_pedidos()
         limpiar()
-        if opcion == 1:
+        if(opcion == 1):
             stock, estado_pedidos = ingresar_pedido(stock, estado_pedidos)
-        elif opcion == 2:
+        elif(opcion == 2):
             stock, estado_pedidos = rehacer_pedido(stock, estado_pedidos)
-        elif opcion == 3:
+        elif(opcion == 3):
             stock, estado_pedidos = baja_pedido(stock, estado_pedidos)
-        elif opcion == 4:
+        elif(opcion == 4):
             mostrar_pedidos_procesados(estado_pedidos)
-        elif opcion == 5:
+        elif(opcion == 5):
             actualizar_csv(estado_pedidos)
             condicion_menu = False
 
@@ -646,7 +649,7 @@ def inicio_menu_pedidos(productos: dict)->dict:
 def recoleccion_datos_ciudades()->dict:
     archivo_pedidos = open('pedidos.csv', 'r', encoding='utf-8')
     leectura = csv.reader(archivo_pedidos, dialect='excel', delimiter=',', quotechar='|')
-    next(leectura)
+   
     ciudades: dict = {}
 
     for row in leectura:
@@ -713,11 +716,11 @@ def distribucion_zonas(lista_ciudad: list)->tuple:
     for ciudad in lugar_coordenadas.items():
         if(ciudad[0] == 'CABA'):
             zona_caba.append(ciudad[0])
-        elif int(ciudad[1][0]) > -35:
+        elif(int(ciudad[1][0]) > -35):
             zona_norte[ciudad[0]] = ciudad[1]
-        elif int(ciudad[1][0]) < -40:
+        elif(int(ciudad[1][0]) < -40):
             zona_sur[ciudad[0]] = ciudad[1]
-        elif -35 >= int(ciudad[1][0]) >= -40:
+        elif(-35 >= int(ciudad[1][0]) >= -40):
             zona_centro[ciudad[0]] = ciudad[1]
 
     lista_zona_norte: list = ordenar_norte(zona_norte)
@@ -740,15 +743,15 @@ def averiguar_peso(zona_norte: dict, zona_centro: dict, zona_caba: list, zona_su
     for ciudad in dict_pedidos.values():
         if(ciudad[0] in zona_caba):
             for lista in ciudad:
-                if lista[0] == codigo_botella:
+                if(lista[0] == codigo_botella):
                     peso_caba += (int(lista[1]) * peso_botella)
-                elif lista[0] == codigo_vaso:
+                elif(lista[0] == codigo_vaso):
                     peso_caba += (int(lista[1]) * peso_vaso)
         elif(ciudad[0] in zona_sur):
             for lista in ciudad:
-                if lista[0] == codigo_botella:
+                if(lista[0] == codigo_botella):
                     peso_sur += (int(lista[1]) * peso_botella)
-                elif lista[0] == codigo_vaso:
+                elif(lista[0] == codigo_vaso):
                     peso_sur += (int(lista[1]) * peso_vaso)
         elif(ciudad[0] in zona_norte):
             for lista in ciudad:
@@ -771,7 +774,7 @@ def averiguar_peso(zona_norte: dict, zona_centro: dict, zona_caba: list, zona_su
     return peso_norte, peso_centro, peso_caba, peso_sur
 
 
-def hacer_viaje_optimo(dict_pedidos:dict,opcion: int)->list:
+def hacer_viaje_optimo(dict_pedidos:dict,opcion: str)->None:
     ciudades: list = []
     zona_norte_ciudades : list = []
     zona_centro_ciudades : list = []
@@ -781,45 +784,59 @@ def hacer_viaje_optimo(dict_pedidos:dict,opcion: int)->list:
         ciudades.append(datos[0])
     zona_norte, zona_centro, zona_caba, zona_sur = distribucion_zonas(ciudades)
     for ciudad_en_zona in zona_norte:
-        zona_norte_ciudades.append(ciudad_en_zona[0])
+        zona_norte_ciudades.append(ciudad_en_zona)
     for ciudad_en_zona in zona_centro:
-        zona_centro_ciudades.append(ciudad_en_zona[0])
+        zona_centro_ciudades.append(ciudad_en_zona)
     for ciudad_en_zona in zona_sur:
-        zona_sur_ciudades.append(ciudad_en_zona[0])
+        zona_sur_ciudades.append(ciudad_en_zona)
     zona_caba_ciudades.append(zona_caba[0])
-    if(opcion == 1):
-        return zona_norte_ciudades
-    elif(opcion == 2):
-        return zona_centro_ciudades
-    elif(opcion == 3):
-        return zona_caba_ciudades
-    elif(opcion == 4):
-        return zona_sur_ciudades
+    if(opcion == "1"):
+        if zona_norte_ciudades == []:
+            print('No hay pedidos en esta zona')
+        else:
+            print(zona_norte_ciudades)
+    elif(opcion == "2"):
+        if zona_centro_ciudades == []:
+            print('No hay pedidos en esta zona')
+            
+        else:
+            print(zona_centro_ciudades)
+    elif(opcion == "3"):
+        if zona_caba_ciudades == []:
+            print('No hay pedidos en esta zona')
+            
+        else:
+            print(zona_caba_ciudades)
+    elif(opcion == "4"):
+        if zona_sur_ciudades == []:
+            print('No hay pedidos en esta zona')
+            
+        else:
+            print(zona_sur_ciudades)
 
 
-def hacer_camiones(dict_pedidos: dict)->list:
+def hacer_camiones(dict_pedidos:dict)-> tuple:
     pedidos_que_salen: list = []
-    zona_norte: dict = {}
-    zona_sur: dict = {}
-    zona_centro: dict = {}
+    lista_id_pedidos :list = []
+    zona_norte:dict = {}
+    zona_sur:dict = {}
+    zona_centro:dict = {}
     zona_caba: list = []
-    peso_zonas: dict = {}
-    camiones_disponible: dict = {'utilitero1': 600, 'utilitero2': 1000, 'utilitero3': 500, 'utilitero4': 2000}
+    peso_zonas: list = {}
+    camiones_disponible: dict = {'utilitero1':600,'utilitero2':1000,'utilitero3':500,'utilitero4':2000}
     ciudades: list = []
-
     for datos in dict_pedidos.values():
         ciudades.append(datos[0])
-
-    zona_norte, zona_centro, zona_caba, zona_sur = distribucion_zonas(ciudades)
-    peso_norte, peso_centro, peso_caba, peso_sur = averiguar_peso(zona_norte, zona_centro, zona_caba, zona_sur, dict_pedidos)
+    zona_norte,zona_centro,zona_caba,zona_sur = distribucion_zonas(ciudades)
+    peso_norte,peso_centro,peso_caba,peso_sur = averiguar_peso(zona_norte,zona_centro,zona_caba,zona_sur,dict_pedidos)
     peso_zonas['peso_norte'] = peso_norte
     peso_zonas['peso_centro'] = peso_centro
     peso_zonas['peso_caba'] = peso_caba
     peso_zonas['peso_sur'] = peso_sur
-    camiones_disponible, peso_zonas = ordenar_camiones_pesos(camiones_disponible, peso_zonas)
+    camiones_disponible, peso_zonas = ordenar_camiones_pesos(camiones_disponible,peso_zonas)
     for indice in range(len(camiones_disponible)):
         if(peso_zonas[indice][1] < camiones_disponible[indice][1]):
-            pedidos_que_salen.append([camiones_disponible[indice][0], peso_zonas[indice][0], peso_zonas[indice][1]])
+            pedidos_que_salen.append([camiones_disponible[indice][0],peso_zonas[indice][0],peso_zonas[indice][1]])
     for pedido in pedidos_que_salen:
         if('norte' in pedido[1]):
             pedido.append(zona_norte)
@@ -833,12 +850,16 @@ def hacer_camiones(dict_pedidos: dict)->list:
         elif('sur' in pedido[1]):
             pedido.append(zona_sur)
             pedido.append('zona_sur')
-
-    return pedidos_que_salen
+    for id in dict_pedidos.items():
+        for datos_camion_que_sale in pedidos_que_salen:
+            print(datos_camion_que_sale)
+            if(id[1][0] in datos_camion_que_sale[3]):
+                lista_id_pedidos.append(id[0])
+    return pedidos_que_salen, lista_id_pedidos
 
 
 def escribir_txt(datos:list)->None:
-    if os.path.exists("salida.txt"):
+    if(os.path.exists("salida.txt")):
         os.remove("salida.txt")
     archivo = open('salida.txt', 'a', encoding='utf-8')
 
@@ -868,15 +889,44 @@ def menu_zonas(pedidos: dict)->None:
         print("4- Zona Sur")
         print("5- Salir")
 
-        opcion: str = input("Opcion: ")
+        opcion: int = validar_opcion(["1","2","3","4","5"],'opcion')
+        if(opcion == 5):
+            condicion_menu = False
+            continue
 
-        if(not opcion.isnumeric() or int(opcion) > 5 or int(opcion) < 1):
-            print("Elija una de las opciones solicitadas")
-        elif(int(opcion) >= 1 or int(opcion) <= 4):
-            print(hacer_viaje_optimo(pedidos, opcion))
+        else:
+            print(hacer_viaje_optimo(pedidos, str(opcion)))
 
 
 # --- Fin de funciones de geolocalizacion y recorrido optimo --------
+
+
+
+
+
+# opcion 6
+def articulo_mas_pedido(estado_pedidos: dict)->None:
+    pedidos_list: list = estado_pedidos['pedidos validados'] + estado_pedidos['pedidos cancelados']
+    articulos: dict = {1334: { },568:{ }}
+    cantidad_mas_pedida: int = 0
+    articulo_mas_pedido: str = {}
+    for pedido in pedidos_list:
+        if pedido[6].lower() not in articulos[pedido[5]]:
+            articulos[pedido[5]][pedido[6].lower()] = pedido[7]
+        else:
+            articulos[pedido[5]][pedido[6].lower()] += pedido[7]
+    
+    for color, cantidad in articulos[1334].items():
+        if cantidad > cantidad_mas_pedida:
+            cantidad_mas_pedida = cantidad
+            articulo_mas_pedido = {1334: [color, cantidad]}
+    
+    for color, cantidad in articulos[568].items():
+        if cantidad > cantidad_mas_pedida:
+            cantidad_mas_pedida = cantidad
+            articulo_mas_pedido = {568: [color, cantidad]}
+    
+    return articulo_mas_pedido
 
 
 # opcion 7)
@@ -905,14 +955,18 @@ def main()->None:
     diccionario_productos: dict = {1334: {"precio": 15, "peso": 450, "color": {"verde": 0, "rojo": 0, "azul": 0, "negro": 0, "amarillo": 0}},
                                    568: {"precio": 8, "peso": 350, "color": {"azul": 0, "negro": 0}}
                                    }
-    # HAY QUE VERIFICAR CON GONZA
-    estado_pedidos: dict = {}
+    
     condicion_menu: bool = True
-
 
     print("Inicio de proceso para Lote 0001")
     determinar_lote(diccionario_productos)
-    print("Procesamiento de Lote 0001 terminado. Iniciando programa ...")
+    lista_pedidos: list = parse_pedidos_csv()
+    estado_pedidos: dict = procesar_pedidos_csv(diccionario_productos,lista_pedidos)
+    actualizar_csv(estado_pedidos)
+    print("Procesamiento de Lote 0001 terminado.")
+    input("Pulse ENTER para ver los pedidos procesados/cancelados")
+    mostrar_pedidos_procesados(estado_pedidos)
+    diccionario_pedidos: dict = recoleccion_datos_ciudades()
 
     while(condicion_menu):
         print("Ingrese una de las siguientes opciones: ")
@@ -931,19 +985,18 @@ def main()->None:
             print("Ingrese unicamente las opciones solicitadas dentro del menu")
         else:
             if(int(opcion) == 1):
-                # LOS PEDIDOS TIENEN QUE ESTAR SIEMPRE A MANO Y PRE-PROCESADOS, ANTES DE QUERER HACER UN ABM
-                estado_pedidos = inicio_menu_pedidos(diccionario_productos)
+                estado_pedidos = inicio_menu_pedidos(diccionario_productos,estado_pedidos)
             elif(int(opcion) == 2):
+                diccionario_pedidos: dict = recoleccion_datos_ciudades()
                 if(len(diccionario_pedidos) > 0):
                     # LAS FUNCIONES DE RECORRIDO OPTIMO RECIBEN POR PARAMETRO LA RUTA DE ACCESO AL ARCHIVO DE PEDIDOS, NO EL DICT DE PEDIDOS EN SI
-                    diccionario_pedidos: dict = recoleccion_datos_ciudades()
                     menu_zonas(diccionario_pedidos)
                 else:
                     print("No exiten pedidos para optimizar")
             elif(int(opcion) == 3):
+                diccionario_pedidos: dict = recoleccion_datos_ciudades()
                 if(len(diccionario_pedidos) > 0):
-                    diccionario_pedidos: dict = recoleccion_datos_ciudades()
-                    camiones: list = hacer_camiones(diccionario_pedidos)
+                    camiones,id_pedidos = hacer_camiones(diccionario_pedidos)
                     escribir_txt(camiones)
                 else:
                     print("No existen pedidos para procesar y listar")
@@ -959,3 +1012,5 @@ def main()->None:
                 condicion_menu = False
 
         print("Fin del programa")
+
+main()
