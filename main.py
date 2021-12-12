@@ -45,20 +45,21 @@ def load_image(img_path: str)->tuple:
     img = cv2.resize(img, None, fx=0.4, fy=0.4)
     height, width, channels = img.shape
 
-    return img, height, width, channels
+    return img, height, width
 
 
 def detect_objects(img: list, net, output_layers: list)->tuple:
     '''
     - Deteccion de objetos en las imagenes
     - Se procesan y se hace una lectura de los pixeles en la imagen
+    - Re-definir el tamaño de la imagen permite al modelo pre-entrenado para detectar imagenes hacerlo de manera mas rapida
     '''
     blob: list = cv2.dnn.blobFromImage(img, scalefactor=0.00392, size=(320, 320), mean=(0, 0, 0), swapRB=True, crop=False)
     net.setInput(blob)
     # se almacena en una variable outputs la informacion del objeto detectado dentro de la imagen
     outputs: list = net.forward(output_layers)
 
-    return blob, outputs
+    return outputs
 
 
 def get_box_dimensions(outputs: list, height: int, width: int)->tuple:
@@ -234,8 +235,8 @@ def image_detect(img_path: str, fle_name: str, productos: dict)->None:
     - Si el objeto no es un vaso o una botella, se muestra un mensaje de proceso detenido sino, se determina el color y se agrega al diccionario de stock
     '''
     model, classes, colors, output_layers = load_yolo()
-    image, height, width, channels = load_image(img_path)
-    blob, outputs = detect_objects(image, model, output_layers)
+    image, height, width = load_image(img_path)
+    outputs = detect_objects(image, model, output_layers)
     boxes, config, class_ids = get_box_dimensions(outputs, height, width)
     label: str = draw_labels(boxes, config, colors, class_ids, classes, image, fle_name)
 
@@ -708,7 +709,7 @@ def distribucion_zonas(lista_ciudad: list)->tuple:
     zona_centro: dict = {}
     zona_caba: list = []
 
-    for indice in range(1,len(lista_ciudad)):
+    for indice in range(1, len(lista_ciudad)):
         buscar_ciudad = geolocator.geocode(lista_ciudad[indice], country_codes='AR', timeout=15)
         latitud_ciudad: float = buscar_ciudad.latitude
         longitud_ciudad: float = buscar_ciudad.longitude
@@ -766,20 +767,20 @@ def averiguar_peso(zona_norte: dict, zona_centro: dict, zona_caba: list, zona_su
                 elif(lista[0] == codigo_vaso):
                     peso_centro += (int(lista[1]) * peso_vaso)
 
-    peso_centro: float = peso_centro /1000
-    peso_caba: float = peso_caba /1000
-    peso_norte: float = peso_norte /1000
-    peso_sur: float = peso_sur /1000
+    peso_centro: float = peso_centro / 1000
+    peso_caba: float = peso_caba / 1000
+    peso_norte: float = peso_norte / 1000
+    peso_sur: float = peso_sur / 1000
 
     return peso_norte, peso_centro, peso_caba, peso_sur
 
 
 def hacer_viaje_optimo(dict_pedidos:dict,opcion: str)->None:
     ciudades: list = []
-    zona_norte_ciudades : list = []
-    zona_centro_ciudades : list = []
-    zona_caba_ciudades : list = []
-    zona_sur_ciudades : list = []
+    zona_norte_ciudades: list = []
+    zona_centro_ciudades: list = []
+    zona_caba_ciudades: list = []
+    zona_sur_ciudades: list = []
     for datos in dict_pedidos.values():
         ciudades.append(datos[0])
     zona_norte, zona_centro, zona_caba, zona_sur = distribucion_zonas(ciudades)
@@ -798,42 +799,39 @@ def hacer_viaje_optimo(dict_pedidos:dict,opcion: str)->None:
     elif(opcion == "2"):
         if zona_centro_ciudades == []:
             print('No hay pedidos en esta zona')
-            
         else:
             print(zona_centro_ciudades)
     elif(opcion == "3"):
         if zona_caba_ciudades == []:
             print('No hay pedidos en esta zona')
-            
         else:
             print(zona_caba_ciudades)
     elif(opcion == "4"):
         if zona_sur_ciudades == []:
             print('No hay pedidos en esta zona')
-            
         else:
             print(zona_sur_ciudades)
 
 
-def hacer_camiones(dict_pedidos:dict)-> tuple:
+def hacer_camiones(dict_pedidos: dict)->tuple:
     pedidos_que_salen: list = []
-    lista_id_pedidos :list = []
-    zona_norte:dict = {}
-    zona_sur:dict = {}
-    zona_centro:dict = {}
+    lista_id_pedidos: list = []
+    zona_norte: dict = {}
+    zona_sur: dict = {}
+    zona_centro: dict = {}
     zona_caba: list = []
-    peso_zonas: list = {}
-    camiones_disponible: dict = {'utilitero1':600,'utilitero2':1000,'utilitero3':500,'utilitero4':2000}
+    peso_zonas: dict = {}
+    camiones_disponible: dict = {'utilitero1': 600, 'utilitero2': 1000, 'utilitero3': 500, 'utilitero4': 2000}
     ciudades: list = []
     for datos in dict_pedidos.values():
         ciudades.append(datos[0])
-    zona_norte,zona_centro,zona_caba,zona_sur = distribucion_zonas(ciudades)
-    peso_norte,peso_centro,peso_caba,peso_sur = averiguar_peso(zona_norte,zona_centro,zona_caba,zona_sur,dict_pedidos)
+    zona_norte, zona_centro, zona_caba, zona_sur = distribucion_zonas(ciudades)
+    peso_norte, peso_centro, peso_caba, peso_sur = averiguar_peso(zona_norte, zona_centro, zona_caba, zona_sur, dict_pedidos)
     peso_zonas['peso_norte'] = peso_norte
     peso_zonas['peso_centro'] = peso_centro
     peso_zonas['peso_caba'] = peso_caba
     peso_zonas['peso_sur'] = peso_sur
-    camiones_disponible, peso_zonas = ordenar_camiones_pesos(camiones_disponible,peso_zonas)
+    camiones_disponible, peso_zonas = ordenar_camiones_pesos(camiones_disponible, peso_zonas)
     for indice in range(len(camiones_disponible)):
         if(peso_zonas[indice][1] < camiones_disponible[indice][1]):
             pedidos_que_salen.append([camiones_disponible[indice][0],peso_zonas[indice][0],peso_zonas[indice][1]])
@@ -855,6 +853,7 @@ def hacer_camiones(dict_pedidos:dict)-> tuple:
             print(datos_camion_que_sale)
             if(id[1][0] in datos_camion_que_sale[3]):
                 lista_id_pedidos.append(id[0])
+
     return pedidos_que_salen, lista_id_pedidos
 
 
@@ -889,11 +888,10 @@ def menu_zonas(pedidos: dict)->None:
         print("4- Zona Sur")
         print("5- Salir")
 
-        opcion: int = validar_opcion(["1","2","3","4","5"],'opcion')
+        opcion: int = validar_opcion(["1", "2", "3", "4", "5"], 'opcion')
         if(opcion == 5):
             condicion_menu = False
             continue
-
         else:
             print(hacer_viaje_optimo(pedidos, str(opcion)))
 
@@ -902,14 +900,80 @@ def menu_zonas(pedidos: dict)->None:
 
 
 
+# Funciones para determinar pedidos procesados y ordenados por fecha. Opcion 4
+
+
+def listar_pedidos_completos(pedidos_terminados: dict):
+    print(f"Pedidos completados: {len(pedidos_terminados)}")
+    for numero, pedidos in pedidos_terminados.items():
+        print(
+            f"Numero pedido: {numero}, Fecha: {pedidos[0]}/{pedidos[1]}/{pedidos[2]}, Cliente: {pedidos[3]}, Ciudad: {pedidos[4]}, Provincia: {pedidos[5]}")
+        print("     Artículos: ")
+        for articulo in pedidos[6]:
+            print(
+                f"        Numero artículo: {articulo[0]}, Color: {articulo[1]}, Cantidad: {articulo[2]}, Descuento: {articulo[3]}")
+
+
+# Ordeno los pedidos primero por dia despues por mes y por ultimo por fecha.
+def ordenar_pedidos_fecha(pedidos_separados_fecha: dict)->dict:
+    pedidos_terminados_ordenado_dia: list = []
+    pedidos_terminados_ordenado_dia = sorted(pedidos_separados_fecha.items(), key=lambda x: x[1][0], reverse=False)
+    dict_ordenado_dia: dict = {}
+    for pedido in pedidos_terminados_ordenado_dia:
+        dict_ordenado_dia[pedido[0]] = pedido[1]
+
+    pedidos_terminados_ordenado_mes: list = []
+    pedidos_terminados_ordenado_mes = sorted(dict_ordenado_dia.items(), key=lambda x: x[1][1], reverse=False)
+    dict_ordenado_mes: dict = {}
+    for pedido in pedidos_terminados_ordenado_mes:
+        dict_ordenado_mes[pedido[0]] = pedido[1]
+
+    pedidos_terminados_ordenado_final: list = []
+    pedidos_terminados_ordenado_final = sorted(dict_ordenado_mes.items(), key=lambda x: x[1][2], reverse=False)
+    dict_ordenado_final: dict = {}
+    for pedido in pedidos_terminados_ordenado_final:
+        dict_ordenado_final[pedido[0]] = pedido[1]
+
+    return dict_ordenado_final
+
+
+# crea un dict que separa las fechas "12/10/2001" --- "12","10","2001"
+def separar_fechas(pedidos_terminados: dict, pedidos_fechas_separada: dict)->dict:
+    dia: int = 0
+    mes: int = 0
+    anio: int = 0
+    for numero, pedido in pedidos_terminados.items():
+        fecha_seperada = pedidos_terminados[numero][0].split("/")
+        dia = fecha_seperada[0]
+        mes = fecha_seperada[1]
+        anio = fecha_seperada[2]
+        pedidos_fechas_separada[numero] = [dia, mes, anio, pedido[1], pedido[2], pedido[3], pedido[4]]
+
+    return pedidos_fechas_separada
+
+
+# leo el csv y comparo con la lista de ids de pedidos completados que obtengo de la funcion hacer_camiones()
+def leer_csv(pedidos_procesados: dict, pedidos_que_salen: list)->dict:
+    with open("TP2\TP_Archivos_de_Configuración/pedidos.csv", newline="", encoding="UTF-8") as archivo_csv:
+        csv_reader = csv.reader(archivo_csv, delimiter=",")
+        next(csv_reader)
+        for row in csv_reader:
+            if((row[0] not in pedidos_procesados.keys()) and (row[0] in pedidos_que_salen)):
+                pedidos_procesados[row[0]] = [row[1], row[2], row[3], row[4], [[row[5], row[6], row[7], row[8]]]]
+            elif((row[0] in pedidos_procesados.keys()) and (row[0] in pedidos_que_salen)):
+                pedidos_procesados[row[0]][4].append([row[5], row[6], row[7], row[8]])
+
+        return pedidos_procesados
+
+# ---- Fin opcion 4 ------
 
 
 # opcion 6
-def articulo_mas_pedido(estado_pedidos: dict)->None:
+def articulo_mas_pedido(estado_pedidos: dict)->dict:
     pedidos_list: list = estado_pedidos['pedidos validados'] + estado_pedidos['pedidos cancelados']
     articulos: dict = {1334: { },568:{ }}
     cantidad_mas_pedida: int = 0
-    articulo_mas_pedido: str = {}
+    articulo_mas_pedido: dict = {}
     for pedido in pedidos_list:
         if pedido[6].lower() not in articulos[pedido[5]]:
             articulos[pedido[5]][pedido[6].lower()] = pedido[7]
@@ -951,6 +1015,7 @@ def generar_archivos_productos(productos: dict)->None:
         archivo_vasos.write(f"{nombre_color.capitalize()}: {valor_color} \n")
     archivo_vasos.close()
 
+
 def main()->None:
     diccionario_productos: dict = {1334: {"precio": 15, "peso": 450, "color": {"verde": 0, "rojo": 0, "azul": 0, "negro": 0, "amarillo": 0}},
                                    568: {"precio": 8, "peso": 350, "color": {"azul": 0, "negro": 0}}
@@ -961,7 +1026,7 @@ def main()->None:
     print("Inicio de proceso para Lote 0001")
     determinar_lote(diccionario_productos)
     lista_pedidos: list = parse_pedidos_csv()
-    estado_pedidos: dict = procesar_pedidos_csv(diccionario_productos,lista_pedidos)
+    estado_pedidos: dict = procesar_pedidos_csv(diccionario_productos, lista_pedidos)
     actualizar_csv(estado_pedidos)
     print("Procesamiento de Lote 0001 terminado.")
     input("Pulse ENTER para ver los pedidos procesados/cancelados")
@@ -985,32 +1050,43 @@ def main()->None:
             print("Ingrese unicamente las opciones solicitadas dentro del menu")
         else:
             if(int(opcion) == 1):
-                estado_pedidos = inicio_menu_pedidos(diccionario_productos,estado_pedidos)
+                estado_pedidos = inicio_menu_pedidos(diccionario_productos, estado_pedidos)
             elif(int(opcion) == 2):
-                diccionario_pedidos: dict = recoleccion_datos_ciudades()
+                diccionario_pedidos = recoleccion_datos_ciudades()
                 if(len(diccionario_pedidos) > 0):
-                    # LAS FUNCIONES DE RECORRIDO OPTIMO RECIBEN POR PARAMETRO LA RUTA DE ACCESO AL ARCHIVO DE PEDIDOS, NO EL DICT DE PEDIDOS EN SI
                     menu_zonas(diccionario_pedidos)
                 else:
                     print("No exiten pedidos para optimizar")
             elif(int(opcion) == 3):
-                diccionario_pedidos: dict = recoleccion_datos_ciudades()
+                diccionario_pedidos = recoleccion_datos_ciudades()
                 if(len(diccionario_pedidos) > 0):
-                    camiones,id_pedidos = hacer_camiones(diccionario_pedidos)
+                    camiones, id_pedidos = hacer_camiones(diccionario_pedidos)
                     escribir_txt(camiones)
                 else:
                     print("No existen pedidos para procesar y listar")
             elif(int(opcion) == 4):
-                print(4)
+                pedidos_fechas_separada: dict = {}
+                pedidos_terminados_dict: dict = {}
+                pedidos_procesados: dict = {}
+                # hacer_camiones(a) = lista_ids_pedidos
+                lista_ids_pedidos: list = ['1', '2', '3', '4', '5']
+                pedidos_procesados = leer_csv(pedidos_procesados, lista_ids_pedidos)
+                pedidos_fechas_separada = separar_fechas(pedidos_procesados, pedidos_fechas_separada)
+                pedidos_terminados_dict = ordenar_pedidos_fecha(pedidos_fechas_separada)
+                listar_pedidos_completos(pedidos_terminados_dict)
             elif(int(opcion) == 5):
                 print(5)
             elif(int(opcion) == 6):
-                print(6)
+                if(len(estado_pedidos) > 0):
+                    articulo_mas_pedido(estado_pedidos)
+                else:
+                    print("No existen pedidos para verificar la opcion solicitada")
             elif(int(opcion) == 7):
                 generar_archivos_productos(diccionario_productos)
             else:
                 condicion_menu = False
 
         print("Fin del programa")
+
 
 main()
