@@ -48,7 +48,7 @@ def load_image(img_path: str)->tuple:
     return img, height, width
 
 
-def detect_objects(img: list, net, output_layers: list)->tuple:
+def detect_objects(img: list, net, output_layers: list)->list:
     '''
     - Deteccion de objetos en las imagenes
     - Se procesan y se hace una lectura de los pixeles en la imagen
@@ -262,14 +262,19 @@ def recuperar_productos()->list:
     return os.listdir("TP_Arch_config/Lote0001")
 
 
-def determinar_lote(productos: dict)->None:
+def determinar_lote()->dict:
     '''
     - Se recibe el diccionario de productos por parametro
     - Se crea una lista de archivos a detectar imagenes
     - Se ejecuta la funcion para reconocimiento de imagenes, colores y actualizacion de stock
     '''
+    diccionario_productos: dict = {1334: {"precio": 15, "peso": 450, "color": {"verde": 0, "rojo": 0, "azul": 0, "negro": 0, "amarillo": 0}},
+                                    568: {"precio": 8, "peso": 350, "color": {"azul": 0, "negro": 0}}}
+
     productos_archivos: list = recuperar_productos()
-    categorizar_archivos(productos, productos_archivos)
+    categorizar_archivos(diccionario_productos, productos_archivos)
+
+    return diccionario_productos
 
 # ---------------- Fin de funciones para reconocimiento de imagenes y color --------------------
 
@@ -347,8 +352,8 @@ def procesar_pedidos_csv(stock: dict)->dict:
 
 
 def mostrar_pedidos_procesados(estado_pedidos: dict)->None:
-    validados: list = estado_pedidos['pedidos validados']
-    cancelados: list = estado_pedidos['pedidos cancelados']
+    validados: list = sorted(estado_pedidos['pedidos validados'],key=lambda x: int(x[0]))
+    cancelados: list = sorted(estado_pedidos['pedidos cancelados'],key=lambda x: int(x[0]))
     header: str = ' Pedido     Fecha        Cliente         Datos de envio '
     n_pedidos_mostrados: list = []
     print('\n\n\n                 PEDIDOS PROCESADOS ')
@@ -935,6 +940,8 @@ def escribir_txt(datos:list)->None:
     archivo.close()
 
 # punto 2)
+
+
 def menu_zonas(pedidos: dict)->None:
     condicion_menu: bool = True
 
@@ -957,49 +964,47 @@ def menu_zonas(pedidos: dict)->None:
 # --- Fin de funciones de geolocalizacion y recorrido optimo --------
 
 
+# Funciones para determinar pedidos procesados y ordenados por fecha. Opcion 4)
 
-# Funciones para determinar pedidos procesados y ordenados por fecha. Opcion 4
 
-
-def listar_pedidos_completos(pedidos_terminados: dict):
+def listar_pedidos_completos(pedidos_terminados : dict)->None:
+    print("|||PEDIDOS COMPLETADOS|||")
     print(f"Pedidos completados: {len(pedidos_terminados)}")
     for numero, pedidos in pedidos_terminados.items():
-        print(
-            f"Numero pedido: {numero}, Fecha: {pedidos[0]}/{pedidos[1]}/{pedidos[2]}, Cliente: {pedidos[3]}, Ciudad: {pedidos[4]}, Provincia: {pedidos[5]}")
+        print(f"Numero pedido: {numero}, Fecha: {pedidos[0]}/{pedidos[1]}/{pedidos[2]}, Cliente: {pedidos[3]}, Ciudad: {pedidos[4]}, Provincia: {pedidos[5]}")
         print("     Artículos: ")
         for articulo in pedidos[6]:
-            print(
-                f"        Numero artículo: {articulo[0]}, Color: {articulo[1]}, Cantidad: {articulo[2]}, Descuento: {articulo[3]}")
+            print(f"        Numero artículo: {articulo[0]}, Color: {articulo[1]}, Cantidad: {articulo[2]}, Descuento: {articulo[3]}")
 
 
-# Ordeno los pedidos primero por dia despues por mes y por ultimo por fecha.
-def ordenar_pedidos_fecha(pedidos_separados_fecha: dict)->dict:
-    pedidos_terminados_ordenado_dia: list = []
-    pedidos_terminados_ordenado_dia = sorted(pedidos_separados_fecha.items(), key=lambda x: x[1][0], reverse=False)
-    dict_ordenado_dia: dict = {}
+#Ordeno los pedidos primero por dia despues por mes y por ultimo por fecha.
+def ordenar_pedidos_fecha(pedidos_separados_fecha : dict)->dict:
+    pedidos_terminados_ordenado_dia : list = []
+    pedidos_terminados_ordenado_dia = sorted(pedidos_separados_fecha.items(), key = lambda x: x[1][0], reverse = False)
+    dict_ordenado_dia : dict = {}
     for pedido in pedidos_terminados_ordenado_dia:
         dict_ordenado_dia[pedido[0]] = pedido[1]
 
-    pedidos_terminados_ordenado_mes: list = []
-    pedidos_terminados_ordenado_mes = sorted(dict_ordenado_dia.items(), key=lambda x: x[1][1], reverse=False)
-    dict_ordenado_mes: dict = {}
+    pedidos_terminados_ordenado_mes : list = []
+    pedidos_terminados_ordenado_mes = sorted(dict_ordenado_dia.items(), key = lambda x: x[1][1], reverse = False)
+    dict_ordenado_mes : dict = {}
     for pedido in pedidos_terminados_ordenado_mes:
         dict_ordenado_mes[pedido[0]] = pedido[1]
 
-    pedidos_terminados_ordenado_final: list = []
-    pedidos_terminados_ordenado_final = sorted(dict_ordenado_mes.items(), key=lambda x: x[1][2], reverse=False)
-    dict_ordenado_final: dict = {}
+    pedidos_terminados_ordenado_final : list = []
+    pedidos_terminados_ordenado_final = sorted(dict_ordenado_mes.items(), key = lambda x: x[1][2], reverse = False)
+    dict_ordenado_final : dict = {}
     for pedido in pedidos_terminados_ordenado_final:
         dict_ordenado_final[pedido[0]] = pedido[1]
 
     return dict_ordenado_final
 
 
-# crea un dict que separa las fechas "12/10/2001" --- "12","10","2001"
-def separar_fechas(pedidos_terminados: dict, pedidos_fechas_separada: dict)->dict:
-    dia: int = 0
-    mes: int = 0
-    anio: int = 0
+#crea un dict que separa las fechas "12/10/2001" --- "12","10","2001"
+def separar_fechas(pedidos_terminados : dict, pedidos_fechas_separada : dict)->dict:
+    dia : int = 0
+    mes : int = 0
+    anio : int = 0
     for numero, pedido in pedidos_terminados.items():
         fecha_seperada = pedidos_terminados[numero][0].split("/")
         dia = fecha_seperada[0]
@@ -1010,24 +1015,58 @@ def separar_fechas(pedidos_terminados: dict, pedidos_fechas_separada: dict)->dic
     return pedidos_fechas_separada
 
 
-# leo el csv y comparo con la lista de ids de pedidos completados que obtengo de la funcion hacer_camiones()
-def leer_csv(pedidos_procesados: dict, pedidos_que_salen: list)->dict:
-    # TP2\TP_Archivos_de_Configuración/
-    with open("pedidos.csv", newline="", encoding="UTF-8") as archivo_csv:
-        csv_reader = csv.reader(archivo_csv, delimiter=",")
-        next(csv_reader)
-        for row in csv_reader:
-            if((row[0] not in pedidos_procesados.keys()) and (row[0] in pedidos_que_salen)):
-                pedidos_procesados[row[0]] = [row[1], row[2], row[3], row[4], [[row[5], row[6], row[7], row[8]]]]
-            elif((row[0] in pedidos_procesados.keys()) and (row[0] in pedidos_que_salen)):
-                pedidos_procesados[row[0]][4].append([row[5], row[6], row[7], row[8]])
+#leo el csv y comparo con la lista de ids de pedidos completados que obtengo de la funcion hacer_camiones()
+def pasar_listaCsv_dict(pedidos_procesados : dict, pedidos_que_salen : list, lista_csv : list)->dict:
+    for objeto in lista_csv:
+        if((objeto[0] not in pedidos_procesados.keys()) and (objeto[0] in pedidos_que_salen)):
+            pedidos_procesados[objeto[0]] = [objeto[1], objeto[2], objeto[3], objeto[4], [[objeto[5],objeto[6],objeto[7],objeto[8]]]]
+        elif((objeto[0] in pedidos_procesados.keys()) and (objeto[0] in pedidos_que_salen)):
+            pedidos_procesados[objeto[0]][4].append([objeto[5],objeto[6],objeto[7],objeto[8]])
 
-        return pedidos_procesados
+    return pedidos_procesados
 
 # ---- Fin opcion 4 ------
 
 
-# opcion 6: ARTICULO MAS PEDIDO Y ARTICULOS ENTREGADOS
+# opcion 5)
+def listar_pedidos_rosario(pedidos_rosario: dict) -> None:
+    if (len(pedidos_rosario) > 0):
+        print("|||PEDIDOS EN ROSARIO|||")
+        print(f"Pedidos en Rosario: {len(pedidos_rosario)}")
+        for numero, pedidos in pedidos_rosario.items():
+            print(
+                f"Numero pedido: {numero}, Fecha: {pedidos[0]}, Cliente: {pedidos[1]}, Ciudad: {pedidos[2]}, Provincia: {pedidos[3]}")
+            print("     Artículos: ")
+            for articulo in pedidos[4]:
+                print(
+                    f"        Numero artículo: {articulo[0]}, Color: {articulo[1]}, Cantidad: {articulo[2]}, Descuento: {articulo[3]}")
+    else:
+        print("No hay pedidos que se encuentren en Rosario")
+
+
+def pedidos_en_rosario(pedidos_procesados: dict, pedidos_rosario: dict) -> dict:
+    ciudad: str = ""
+    valor_total: int = 0
+    for numero, pedidos in pedidos_procesados.items():
+        ciudad = pedidos[3]
+        if (ciudad.lower() == "rosario"):
+            pedidos_rosario[numero] = pedidos
+
+    for numero, pedidos in pedidos_rosario.items():
+        for articulo in pedidos[4]:
+            if (articulo[0] == "1334"):
+                valor_total += (int(articulo[2]) * 15)
+            elif (articulo[0] == "568"):
+                valor_total += (int(articulo[2]) * 8)
+
+        pedidos_rosario[numero].append(valor_total)
+
+    return pedidos_rosario
+
+# --------- Fin opcion 5 -------------------------------
+
+
+# opcion 6): ARTICULO MAS PEDIDO Y ARTICULOS ENTREGADOS
 
 def articulo_mas_pedido(estado_pedidos: dict)->dict:
     '''
@@ -1057,6 +1096,7 @@ def articulo_mas_pedido(estado_pedidos: dict)->dict:
             articulo_mas_pedido = {568: [color, int(cantidad)]}
     
     return articulo_mas_pedido
+
 
 def lista_pedidos_entregados(n_pedidos_entregados: dict)->list:
     '''
@@ -1138,13 +1178,10 @@ def generar_archivos_productos(productos: dict)->None:
 
 
 def main()->None:
-    diccionario_productos: dict = {1334: {"precio": 15, "peso": 450, "color": {"verde": 0, "rojo": 0, "azul": 0, "negro": 0, "amarillo": 0}},
-                                    568: {"precio": 8, "peso": 350, "color": {"azul": 0, "negro": 0}}}
-                                    
     condicion_menu: bool = True
 
     print("Inicio de proceso para Lote 0001")
-    determinar_lote(diccionario_productos)
+    diccionario_productos: dict = determinar_lote()
     print("Procesamiento de Lote 0001 terminado.")
    
     #----- PROCESAMIENTO DE PEDIDOS DEL .CSV ---#
@@ -1188,15 +1225,7 @@ def main()->None:
                 else:
                     print("No existen pedidos para procesar y listar")
             elif(int(opcion) == 4):
-                pedidos_fechas_separada: dict = {}
-                pedidos_terminados_dict: dict = {}
-                pedidos_procesados: dict = {}
-                # hacer_camiones(a) = lista_ids_pedidos
-                lista_ids_pedidos: list = ['1', '2', '3', '4', '5']
-                pedidos_procesados = leer_csv(pedidos_procesados, lista_ids_pedidos)
-                pedidos_fechas_separada = separar_fechas(pedidos_procesados, pedidos_fechas_separada)
-                pedidos_terminados_dict = ordenar_pedidos_fecha(pedidos_fechas_separada)
-                listar_pedidos_completos(pedidos_terminados_dict)
+                print(4)
             elif(int(opcion) == 5):
                 print(5)
             elif(int(opcion) == 6):
