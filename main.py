@@ -478,6 +478,27 @@ def validar_opcion(opciones: list, opcion: str)->str:
 
     return ingresar_opcion.lower()
 
+def validar_datos_envio()->tuple:
+    '''
+    - Solicita el ingreso de ciudad y provincia y con la libreria geopy
+    - verifica que sean datos validos
+    '''
+    geolocator = Nominatim(user_agent='API')
+    ciudad: str = validar_str('ciudad')
+    provincia: str = validar_str('provincia')
+    condicion: bool = True
+    while(condicion):
+        buscar_ciudad = geolocator.geocode(f'{ciudad},{provincia}', country_codes='AR', timeout=15)
+        if(buscar_ciudad != None):
+            condicion = False
+            
+        else:
+            print('No se pudieron validar los datos de envio, intente nuevamente. ')
+            ciudad: str = validar_str('ciudad')
+            provincia: str = validar_str('provincia')
+
+    return ciudad.title(),provincia.title()
+
 
 def ingresar_pedido(stock: dict, estado_pedidos: dict)->tuple:
     ultimo_pedido: int = ultimo_numero_pedido(estado_pedidos)
@@ -486,8 +507,7 @@ def ingresar_pedido(stock: dict, estado_pedidos: dict)->tuple:
     fecha = time.strftime("%d/%m/%Y")
     limpiar()
     cliente: str = validar_str('nombre del cliente')
-    ciudad: str = validar_str('ciudad')
-    provincia: str = validar_str('provincia')
+    ciudad,provincia = validar_datos_envio() 
     stock, pedido = ingresar_producto_a_pedido(stock, numero_pedido, fecha, cliente, ciudad, provincia)
     estado_pedidos['pedidos validados'].append(pedido)
 
@@ -992,8 +1012,8 @@ def separar_fechas(pedidos_terminados: dict, pedidos_fechas_separada: dict)->dic
 
 # leo el csv y comparo con la lista de ids de pedidos completados que obtengo de la funcion hacer_camiones()
 def leer_csv(pedidos_procesados: dict, pedidos_que_salen: list)->dict:
-  
-    with open("TP2\TP_Archivos_de_Configuración/pedidos.csv", newline="", encoding="UTF-8") as archivo_csv:
+    # TP2\TP_Archivos_de_Configuración/
+    with open("pedidos.csv", newline="", encoding="UTF-8") as archivo_csv:
         csv_reader = csv.reader(archivo_csv, delimiter=",")
         next(csv_reader)
         for row in csv_reader:
@@ -1118,9 +1138,9 @@ def generar_archivos_productos(productos: dict)->None:
 
 
 def main()->None:
-     diccionario_productos: dict = {1334: {"precio": 15, "peso": 450, "color": {"verde": 0, "rojo": 0, "azul": 0, "negro": 0, "amarillo": 0}},
-                                    568: {"precio": 8, "peso": 350, "color": {"azul": 0, "negro": 0}}
-                                    }
+    diccionario_productos: dict = {1334: {"precio": 15, "peso": 450, "color": {"verde": 0, "rojo": 0, "azul": 0, "negro": 0, "amarillo": 0}},
+                                    568: {"precio": 8, "peso": 350, "color": {"azul": 0, "negro": 0}}}
+                                    
     condicion_menu: bool = True
 
     print("Inicio de proceso para Lote 0001")
@@ -1137,7 +1157,6 @@ def main()->None:
     diccionario_pedidos: dict = recoleccion_datos_ciudades()
 
     while(condicion_menu):
-        limpiar()
         print("Ingrese una de las siguientes opciones: ")
         print("1- ABM (Alta; Baja; Modificacion) de pedidos.")
         print("2- Determinar recorrido optimo por zona")
