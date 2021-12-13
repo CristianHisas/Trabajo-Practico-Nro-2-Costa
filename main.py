@@ -290,26 +290,13 @@ def validar_entero(opcion_min: int, opcion_max: int, opcion: str)->int:
     return int(entero)
 
 
-def menu_pedidos()->int:
-    limpiar()
-    print('         MENÚ        ')
-    print('1) Ingresar pedido')
-    print('2) Rehacer pedido')
-    print('3) Cancelar pedido')
-    print('4) Mostrar estado de los pedidos')
-    print('5) Terminar')
-    opcion: int = validar_entero(1, 5, 'opcion')
-
-    return opcion
-
-
-def parse_pedidos_csv()->list:
+def listar_pedidos_csv()->list:
     '''
     - Lee los pedidos cargados en el .csv y retorna una lista con ellos
     '''
     pedidos: list = []
 
-    with open('pedidos.csv', 'r') as f:
+    with open('pedidos.csv', 'r',encoding='UTF-8') as f:
         reader = csv.reader(f)
         primera_linea: bool = True
 
@@ -317,21 +304,27 @@ def parse_pedidos_csv()->list:
             if(primera_linea):
                 primera_linea = False
                 continue
+            if(pedido[6].lower() == 'amarilla'):
+                pedido[6] = 'Amarillo'
+                pedidos.append(pedido)
             else:
                 pedidos.append(pedido)
 
     return pedidos
 
 
-def procesar_pedidos_csv(stock: dict, pedidos: list)->dict:
+def procesar_pedidos_csv(stock: dict)->dict:
     '''
-    devuelve un dict con los datos de los pedidos validados y cancelados, y el stock actualizado
+    - Verifica segun el stock cuales son los pedidos que se pueden completar
+    - Escribe en el .csv los pedidos que se pudieron validar 
+    - Devuelve un dict con los pedidos validados y cancelados
     '''
+    lista_pedidos: list = listar_pedidos_csv()
     estado_pedidos: dict = {}
     validados: list = []
     cancelados: list = []
     n_pedidos_cancelados: list = []
-    for pedido in pedidos:
+    for pedido in lista_pedidos:
 
         if(stock[int(pedido[5])]['color'][pedido[6].lower()] - int(pedido[7]) < 0 and not pedido in cancelados):
             cancelados.append(pedido)
@@ -346,6 +339,9 @@ def procesar_pedidos_csv(stock: dict, pedidos: list)->dict:
 
     estado_pedidos['pedidos cancelados'] = cancelados
     estado_pedidos['pedidos validados'] = validados
+
+    actualizar_csv(estado_pedidos)
+    
 
     return estado_pedidos
 
@@ -377,6 +373,10 @@ def mostrar_pedidos_procesados(estado_pedidos: dict)->None:
 
 
 def ultimo_numero_pedido(estado_pedidos: dict)->int:
+    '''
+    - Recibe por parametro los pedidos que se realizaron hasta el momento
+    - Determina cual es el ultimo numero de pedido realizado y lo retorna
+    '''
     ultimo_pedido: int = 0
     for pedido in estado_pedidos['pedidos validados']:
         if(int(pedido[0]) > ultimo_pedido):
@@ -437,8 +437,11 @@ def mostrar_stock(stock: dict, cod_articulo: int)->None:
 
 
 def validar_color_stock(stock: dict, cod_articulo: int)->tuple:
+    '''
+    - Pide ingresar color y cantidad y valida si esta disponible esa cantidad en stock-
+    '''
     color: str = validar_color_producto(cod_articulo)
-    cantidad: int = validar_entero(1, 100, 'cantidaad')
+    cantidad: int = validar_entero(1, 100, 'cantidad')
 
     while(stock[cod_articulo]['color'][color] - cantidad < 0):
         mostrar_stock(stock, cod_articulo)
@@ -451,6 +454,12 @@ def validar_color_stock(stock: dict, cod_articulo: int)->tuple:
 
 
 def ingresar_producto_a_pedido(stock: dict, n_pedido: str, fecha: str, cliente: str, ciudad: str, provincia: str)->tuple:
+    '''
+    - Se le pasa por parametros la informacion del pedido ya registrada anteriormente
+    - Crea una lista donde se va a almacenar los datos del pedido
+    - Pide los datos del producto a ingresar
+    - Retorna una lista con el articulo del pedido con los datos completos y el stock actualizado
+    '''
     pedido: list = []
     codigo_articulo: int = validar_codigo_producto()
     color, cantidad = validar_color_stock(stock, codigo_articulo)
@@ -499,9 +508,13 @@ def ingresar_pedido(stock: dict, estado_pedidos: dict)->tuple:
 
 
 def remover_pedido_validado(n_pedido: int, estado_pedidos: dict)->dict:
+    '''
+    - Se le pasa por parametro un numero de pedido
+    - Remueve todos los articulos que contengan ese numero de pedido de estado_pedidos['pedidos validados'] 
+    '''
     lista_actualizada: list = []
     for pedido in estado_pedidos['pedidos validados']:
-        if(pedido[0] != n_pedido):
+        if(int(pedido[0]) != n_pedido):
             lista_actualizada.append(pedido)
 
     estado_pedidos['pedidos validados'] = lista_actualizada
@@ -510,9 +523,13 @@ def remover_pedido_validado(n_pedido: int, estado_pedidos: dict)->dict:
 
 
 def remover_pedido_cancelado(n_pedido: int, estado_pedidos: dict)->dict:
+    '''
+    - Se le pasa por parametro un numero de pedido
+    - Remueve todos los articulos que contengan ese numero de pedido de estado_pedidos['pedidos cancelados'] 
+    '''
     lista_actualizada: list = []
     for pedido in estado_pedidos['pedidos cancelados']:
-        if(pedido[0] != n_pedido):
+        if(int(pedido[0]) != n_pedido):
             lista_actualizada.append(pedido)
 
     estado_pedidos['pedidos cancelados'] = lista_actualizada
@@ -521,21 +538,26 @@ def remover_pedido_cancelado(n_pedido: int, estado_pedidos: dict)->dict:
 
 
 def rehacer_pedido(stock: dict, estado_pedidos: dict)->tuple:
+    '''
+    - Se pide numero de pedido que desea rehacerse
+    - Toma los datos del pedido ya registrados y los utiliza para ingresarle los articulos nuevos
+    - Retorna el stock actualizado y 'estado_pedidos' actualizados
+    '''
     ultimo_pedido: int = ultimo_numero_pedido(estado_pedidos)
-    numero_pedido: str = str(validar_entero(1, ultimo_pedido, 'numero de pedido'))
+    numero_pedido: int = validar_entero(1, ultimo_pedido, 'numero de pedido')
     limpiar()
     print('Añada un producto')
     datos_pedido: list = []
 
     # tomo los datos del pedido ya registrados
     for pedido in estado_pedidos['pedidos validados']:
-        if(numero_pedido == pedido[0]):
+        if(numero_pedido == int(pedido[0])):
             datos_pedido = pedido
             estado_pedidos = remover_pedido_validado(numero_pedido, estado_pedidos)
 
     # quito el pedido de la lista de cancelados
     for articulo in estado_pedidos['pedidos cancelados']:
-        if(numero_pedido == articulo[0]):
+        if(numero_pedido == int(articulo[0])):
             datos_pedido = articulo
             estado_pedidos = remover_pedido_cancelado(numero_pedido, estado_pedidos)
 
@@ -543,7 +565,7 @@ def rehacer_pedido(stock: dict, estado_pedidos: dict)->tuple:
     cliente: str = datos_pedido[2]
     ciudad: str = datos_pedido[3]
     provincia: str = datos_pedido[4]
-    stock, pedido = ingresar_producto_a_pedido(stock, numero_pedido, fecha, cliente, ciudad, provincia)
+    stock, pedido = ingresar_producto_a_pedido(stock, str(numero_pedido), fecha, cliente, ciudad, provincia)
     estado_pedidos['pedidos validados'].append(pedido)
 
     seguir: bool = True
@@ -556,7 +578,7 @@ def rehacer_pedido(stock: dict, estado_pedidos: dict)->tuple:
             continue
 
         else:
-            stock, pedido = ingresar_producto_a_pedido(stock, numero_pedido, fecha, cliente, ciudad, provincia)
+            stock, pedido = ingresar_producto_a_pedido(stock, str(numero_pedido), fecha, cliente, ciudad, provincia)
             estado_pedidos['pedidos validados'].append(pedido)
 
     return stock, estado_pedidos
@@ -574,11 +596,17 @@ def numero_pedidos_validados(estado_pedidos: dict)->list:
 
 
 def baja_pedido(stock: dict, estado_pedidos: dict)->tuple:
+    '''
+    - Remueve el pedido de 'estado_pedido['pedidos validados]'
+    - Lo almacena en 'estado_pedidos['pedidos cancelados']'
+    - Retorna una tupla con el stock actualizado y los estados de los pedidos
+    '''
+    
     n_pedidos_validados: list = numero_pedidos_validados(estado_pedidos)
     pedido_cancelado: list = []
     articulos_de_pedido: list = []
 
-    n_pedido_baja: str = input('Ingrese el numero del pedido a dar de baja: ')
+    n_pedido_baja: str = input('Ingrese el numero de pedido que desea cancelar: ')
 
     if(n_pedido_baja not in n_pedidos_validados):
         input('No se encontro ese numero de pedido, pulse ENTER para volver al menu')
@@ -591,27 +619,31 @@ def baja_pedido(stock: dict, estado_pedidos: dict)->tuple:
 
         for articulo in articulos_de_pedido:
             stock[int(articulo[5])]['color'][articulo[6].lower()] += int(articulo[7])
-        estado_pedidos = remover_pedido_validado(n_pedido_baja, estado_pedidos)
+        estado_pedidos = remover_pedido_validado(int(n_pedido_baja), estado_pedidos)
         input('Se cancelo el pedido, pulse ENTER para volver al menú ')
 
     return stock, estado_pedidos
 
 
 def actualizar_csv(estado_pedidos: dict)->None:
+    '''
+    - Funcion que al terminar la alta, baja y modificacion de pedidos
+    - escribe los pedidos que se pudieron validar en el .csv
+    '''
     pedidos_validados: list = estado_pedidos['pedidos validados']
     header: list = [
         'Nro. Pedidio', 'Fecha', 'Cliente', 'Ciudad', 'Provincia', 'Cod. Articulo', 'Color', 'Cantidad', 'Descuento'
         ]
     # ordeno por numero de pedido antes de escribir el csv
-    pedidos_validados.sort(key=lambda x: x[0])
+    pedidos_validados.sort(key=lambda x: int(x[0]))
 
-    with open('pedidos.csv', 'w', newline='') as f:
+    with open('pedidos.csv', 'w', newline='',encoding='UTF-8') as f:
         writer = csv.writer(f)
         writer.writerow(header)
         writer.writerows(pedidos_validados)
 
 
-def inicio_menu_pedidos(productos: dict,estado_pedidos: dict)->dict:
+def inicio_ABM(productos: dict,estado_pedidos: dict)->dict:
     '''
     - Actualiza el archivo .csv con los pedidos procesados y validados
     - retorna un dict con los pedidos validados y cancelados:
@@ -619,10 +651,16 @@ def inicio_menu_pedidos(productos: dict,estado_pedidos: dict)->dict:
     '''
     stock: dict = productos
     condicion_menu: bool = True
-    mostrar_pedidos_procesados(estado_pedidos)
 
     while(condicion_menu):
-        opcion: int = menu_pedidos()
+        limpiar()
+        print('         MENÚ        ')
+        print('1) Ingresar pedido')
+        print('2) Rehacer pedido')
+        print('3) Cancelar pedido')
+        print('4) Mostrar estado de los pedidos')
+        print('5) Terminar')
+        opcion: int = validar_entero(1, 5, 'opcion')
         limpiar()
         if(opcion == 1):
             stock, estado_pedidos = ingresar_pedido(stock, estado_pedidos)
@@ -792,22 +830,22 @@ def hacer_viaje_optimo(dict_pedidos:dict,opcion: str)->None:
         zona_sur_ciudades.append(ciudad_en_zona)
     zona_caba_ciudades.append(zona_caba[0])
     if(opcion == "1"):
-        if zona_norte_ciudades == []:
+        if(zona_norte_ciudades == []):
             print('No hay pedidos en esta zona')
         else:
             print(zona_norte_ciudades)
     elif(opcion == "2"):
-        if zona_centro_ciudades == []:
+        if(zona_centro_ciudades == []):
             print('No hay pedidos en esta zona')
         else:
             print(zona_centro_ciudades)
     elif(opcion == "3"):
-        if zona_caba_ciudades == []:
+        if(zona_caba_ciudades == []):
             print('No hay pedidos en esta zona')
         else:
             print(zona_caba_ciudades)
     elif(opcion == "4"):
-        if zona_sur_ciudades == []:
+        if(zona_sur_ciudades == []):
             print('No hay pedidos en esta zona')
         else:
             print(zona_sur_ciudades)
@@ -888,7 +926,7 @@ def menu_zonas(pedidos: dict)->None:
         print("4- Zona Sur")
         print("5- Salir")
 
-        opcion: int = validar_opcion(["1", "2", "3", "4", "5"], 'opcion')
+        opcion: int = validar_entero(1,5, 'opcion')
         if(opcion == 5):
             condicion_menu = False
             continue
@@ -954,6 +992,7 @@ def separar_fechas(pedidos_terminados: dict, pedidos_fechas_separada: dict)->dic
 
 # leo el csv y comparo con la lista de ids de pedidos completados que obtengo de la funcion hacer_camiones()
 def leer_csv(pedidos_procesados: dict, pedidos_que_salen: list)->dict:
+  
     with open("TP2\TP_Archivos_de_Configuración/pedidos.csv", newline="", encoding="UTF-8") as archivo_csv:
         csv_reader = csv.reader(archivo_csv, delimiter=",")
         next(csv_reader)
@@ -968,29 +1007,91 @@ def leer_csv(pedidos_procesados: dict, pedidos_que_salen: list)->dict:
 # ---- Fin opcion 4 ------
 
 
-# opcion 6
+# opcion 6: ARTICULO MAS PEDIDO Y ARTICULOS ENTREGADOS
+
 def articulo_mas_pedido(estado_pedidos: dict)->dict:
+    '''
+    - Recibe por parametro el diccionario donde se encuentran todos los pedidos realizados
+    - Determina cual fue el articulo mas pedido
+    - Retorna un diccionario con los datos del articulo
+    '''
     pedidos_list: list = estado_pedidos['pedidos validados'] + estado_pedidos['pedidos cancelados']
     articulos: dict = {1334: { },568:{ }}
     cantidad_mas_pedida: int = 0
     articulo_mas_pedido: dict = {}
+    
     for pedido in pedidos_list:
-        if pedido[6].lower() not in articulos[pedido[5]]:
-            articulos[pedido[5]][pedido[6].lower()] = pedido[7]
+        if(pedido[6].lower() not in articulos[int(pedido[5])]):
+            articulos[int(pedido[5])][pedido[6].lower()] = int(pedido[7])
         else:
-            articulos[pedido[5]][pedido[6].lower()] += pedido[7]
+            articulos[int(pedido[5])][pedido[6].lower()] += int(pedido[7])
     
     for color, cantidad in articulos[1334].items():
-        if cantidad > cantidad_mas_pedida:
-            cantidad_mas_pedida = cantidad
-            articulo_mas_pedido = {1334: [color, cantidad]}
+        if(int(cantidad) > cantidad_mas_pedida):
+            cantidad_mas_pedida = int(cantidad)
+            articulo_mas_pedido = {1334: [color, int(cantidad)]}
     
     for color, cantidad in articulos[568].items():
-        if cantidad > cantidad_mas_pedida:
-            cantidad_mas_pedida = cantidad
-            articulo_mas_pedido = {568: [color, cantidad]}
+        if(int(cantidad) > cantidad_mas_pedida):
+            cantidad_mas_pedida = int(cantidad)
+            articulo_mas_pedido = {568: [color, int(cantidad)]}
     
     return articulo_mas_pedido
+
+def lista_pedidos_entregados(n_pedidos_entregados: dict)->list:
+    '''
+    - Se recibe los N° de pedidos que se pudieron completar luego del proceso
+    - de envios
+    - Compara en el .csv cuales son esos articulos entregados y los junta en una lista
+    - Retorna la lista con los articulos entregados
+    ''' 
+    
+    lista_pedidos: list = listar_pedidos_csv()
+    pedidos_entregados: list = []
+ 
+    for pedido in lista_pedidos:
+        if(pedido[0] in n_pedidos_entregados):
+            pedidos_entregados.append(pedido)
+    
+    return pedidos_entregados
+    
+
+def cantidad_entregados(articulo_mas_pedido: dict, lista_entregados: list)->int:
+    '''
+    - Verifica cuantas unidades del articulo mas pedido se pudieron entregar
+    - Retorna el resultado
+    '''
+    
+    articulos_entregados: int = 0
+
+    for entregado in lista_entregados:
+        if(int(entregado[5]) in articulo_mas_pedido.keys()):
+            if(entregado[6].lower() == articulo_mas_pedido[int(entregado[5])][0].lower()):
+                articulos_entregados += int(entregado[7])
+    
+    return articulos_entregados
+
+
+def articulos_entregados(estado_pedidos: dict, n_pedidos_entregados)->None:
+    '''
+    - Recibe 'estado_pedidos' diccionario donde se encuentran todos los pedidos realizados
+    - Printea el articulo mas pedido y los que se lograron entregar
+    '''
+    mas_pedido = articulo_mas_pedido(estado_pedidos)
+    lista_entregados: list = lista_pedidos_entregados(n_pedidos_entregados)
+    entregados: int = cantidad_entregados(mas_pedido,lista_entregados)
+    
+    if(1334 in mas_pedido):
+        print(f'El artículo mas pedido es la botella color {mas_pedido[1334][0]}')
+        print(f'Se realizaron {mas_pedido[1334][1]} pedidos de este artículo, se lograron entregar {entregados}')
+        input('Pulse ENTER para volver al menú')
+    
+    elif(568 in mas_pedido):
+        print(f'El artículo mas pedido es el vaso color {mas_pedido[568][0]}')
+        print(f'Se realizaron {mas_pedido[568][1]} pedidos de este artículo, se lograron entregar {entregados}')
+        input('Pulse ENTER para volver al menú')
+
+#-----------------------fin punto 6 --------------------------------#
 
 
 # opcion 7)
@@ -1017,23 +1118,26 @@ def generar_archivos_productos(productos: dict)->None:
 
 
 def main()->None:
-    diccionario_productos: dict = {1334: {"precio": 15, "peso": 450, "color": {"verde": 0, "rojo": 0, "azul": 0, "negro": 0, "amarillo": 0}},
-                                   568: {"precio": 8, "peso": 350, "color": {"azul": 0, "negro": 0}}
-                                   }
-    
+     diccionario_productos: dict = {1334: {"precio": 15, "peso": 450, "color": {"verde": 0, "rojo": 0, "azul": 0, "negro": 0, "amarillo": 0}},
+                                    568: {"precio": 8, "peso": 350, "color": {"azul": 0, "negro": 0}}
+                                    }
     condicion_menu: bool = True
 
     print("Inicio de proceso para Lote 0001")
     determinar_lote(diccionario_productos)
-    lista_pedidos: list = parse_pedidos_csv()
-    estado_pedidos: dict = procesar_pedidos_csv(diccionario_productos, lista_pedidos)
-    actualizar_csv(estado_pedidos)
     print("Procesamiento de Lote 0001 terminado.")
-    input("Pulse ENTER para ver los pedidos procesados/cancelados")
+   
+    #----- PROCESAMIENTO DE PEDIDOS DEL .CSV ---#
+    estado_pedidos: dict = procesar_pedidos_csv(diccionario_productos)
+    #-------------------------------------------#
+    
+    input("\nPulse ENTER para ver los pedidos procesados")
     mostrar_pedidos_procesados(estado_pedidos)
+    
     diccionario_pedidos: dict = recoleccion_datos_ciudades()
 
     while(condicion_menu):
+        limpiar()
         print("Ingrese una de las siguientes opciones: ")
         print("1- ABM (Alta; Baja; Modificacion) de pedidos.")
         print("2- Determinar recorrido optimo por zona")
@@ -1050,7 +1154,7 @@ def main()->None:
             print("Ingrese unicamente las opciones solicitadas dentro del menu")
         else:
             if(int(opcion) == 1):
-                estado_pedidos = inicio_menu_pedidos(diccionario_productos, estado_pedidos)
+                estado_pedidos = inicio_ABM(diccionario_productos, estado_pedidos)
             elif(int(opcion) == 2):
                 diccionario_pedidos = recoleccion_datos_ciudades()
                 if(len(diccionario_pedidos) > 0):
@@ -1078,7 +1182,9 @@ def main()->None:
                 print(5)
             elif(int(opcion) == 6):
                 if(len(estado_pedidos) > 0):
-                    articulo_mas_pedido(estado_pedidos)
+                    # hacer_camiones(a) = lista_ids_pedidos
+                    lista_ids_pedidos: list = ['1', '2', '3', '4', '5']
+                    articulos_entregados(estado_pedidos,lista_ids_pedidos)
                 else:
                     print("No existen pedidos para verificar la opcion solicitada")
             elif(int(opcion) == 7):
@@ -1087,6 +1193,5 @@ def main()->None:
                 condicion_menu = False
 
         print("Fin del programa")
-
 
 main()
