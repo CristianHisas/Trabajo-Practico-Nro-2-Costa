@@ -710,7 +710,7 @@ def inicio_ABM(productos: dict,estado_pedidos: dict) -> dict:
 '''
 
 
-def recoleccion_datos_ciudades() -> dict:
+def recoleccion_datos_ciudades()->dict:
     archivo_pedidos = open('pedidos.csv', 'r', encoding='utf-8')
     leectura = csv.reader(archivo_pedidos, dialect='excel', delimiter=',', quotechar='|')
    
@@ -727,7 +727,7 @@ def recoleccion_datos_ciudades() -> dict:
     return ciudades
 
 
-def ordenar_norte(zona_norte: dict) -> list:
+def ordenar_norte(zona_norte: dict)->list:
     orden_norte: list = sorted(zona_norte.items(), key=lambda x: x[1][1], reverse = True)
     lista_sin_coordenadas_norte: list = []
 
@@ -737,7 +737,7 @@ def ordenar_norte(zona_norte: dict) -> list:
     return lista_sin_coordenadas_norte
 
 
-def ordenar_centro(zona_centro: dict) -> list:
+def ordenar_centro(zona_centro: dict)->list:
     orden_centro: list = sorted(zona_centro.items(), key=lambda x: x[1][1], reverse = True)
     lista_sin_coordenadas_centro: list = []
 
@@ -747,7 +747,7 @@ def ordenar_centro(zona_centro: dict) -> list:
     return lista_sin_coordenadas_centro
 
 
-def ordenar_sur(zona_sur: dict) -> list:
+def ordenar_sur(zona_sur: dict)->list:
     orden_sur: list = sorted(zona_sur.items(), key=lambda x: x[1], reverse = True)
     lista_sin_coordenadas_sur: list= []
 
@@ -757,14 +757,14 @@ def ordenar_sur(zona_sur: dict) -> list:
     return lista_sin_coordenadas_sur
 
 
-def ordenar_camiones_pesos(dict_camiones: dict, dict_pesos: dict) -> tuple:
+def ordenar_camiones_pesos(dict_camiones: dict, dict_pesos: dict)->tuple:
     orden_camiones: list = sorted(dict_camiones.items(), key=lambda x: x[1], reverse = True)
     orden_pesos: list = sorted(dict_pesos.items(), key=lambda x: x[1], reverse = True)
 
     return orden_camiones, orden_pesos
 
 
-def distribucion_zonas(lista_ciudad: list) -> tuple:
+def distribucion_zonas(lista_ciudad: list)->tuple:
     geolocator = Nominatim(user_agent='API')
     lugar_coordenadas: dict = {}
     zona_norte: dict = {}
@@ -778,8 +778,8 @@ def distribucion_zonas(lista_ciudad: list) -> tuple:
         longitud_ciudad: float = buscar_ciudad.longitude
         lugar_coordenadas[lista_ciudad[indice]] = [latitud_ciudad, longitud_ciudad]
     for ciudad in lugar_coordenadas.items():
-        if(ciudad[0] == 'CABA'):
-            zona_caba.append(ciudad[0])
+        if(ciudad[0].lower() == 'caba'):
+            zona_caba.append(ciudad[0].upper())
         elif(int(ciudad[1][0]) > -35):
             zona_norte[ciudad[0]] = ciudad[1]
         elif(int(ciudad[1][0]) < -40):
@@ -794,7 +794,7 @@ def distribucion_zonas(lista_ciudad: list) -> tuple:
     return lista_zona_norte, lista_zona_centro, zona_caba, lista_zona_sur
 
 
-def averiguar_peso(zona_norte: dict, zona_centro: dict, zona_caba: list, zona_sur: dict, dict_pedidos: dict ) -> tuple:
+def averiguar_peso(zona_norte: dict, zona_centro: dict, zona_caba: list, zona_sur: dict, dict_pedidos: dict )->tuple:
     codigo_botella: str = '1334'
     codigo_vaso: str = '568'
     peso_botella: int = 450
@@ -838,7 +838,7 @@ def averiguar_peso(zona_norte: dict, zona_centro: dict, zona_caba: list, zona_su
     return peso_norte, peso_centro, peso_caba, peso_sur
 
 
-def hacer_viaje_optimo(dict_pedidos:dict,opcion: str) -> None:
+def hacer_viaje_optimo(dict_pedidos:dict,opcion: str)->None:
     ciudades: list = []
     zona_norte_ciudades: list = []
     zona_centro_ciudades: list = []
@@ -853,7 +853,8 @@ def hacer_viaje_optimo(dict_pedidos:dict,opcion: str) -> None:
         zona_centro_ciudades.append(ciudad_en_zona)
     for ciudad_en_zona in zona_sur:
         zona_sur_ciudades.append(ciudad_en_zona)
-    zona_caba_ciudades.append(zona_caba[0])
+    if(zona_caba != []):
+        zona_caba_ciudades.append(zona_caba[0])
     if(opcion == "1"):
         if(zona_norte_ciudades == []):
             print('No hay pedidos en esta zona')
@@ -876,7 +877,7 @@ def hacer_viaje_optimo(dict_pedidos:dict,opcion: str) -> None:
             print(zona_sur_ciudades)
 
 
-def hacer_camiones(dict_pedidos: dict) -> tuple:
+def hacer_camiones(dict_pedidos: dict)->tuple:
     pedidos_que_salen: list = []
     lista_id_pedidos: list = []
     zona_norte: dict = {}
@@ -913,14 +914,13 @@ def hacer_camiones(dict_pedidos: dict) -> tuple:
             pedido.append('zona_sur')
     for id in dict_pedidos.items():
         for datos_camion_que_sale in pedidos_que_salen:
-            print(datos_camion_que_sale)
             if(id[1][0] in datos_camion_que_sale[3]):
                 lista_id_pedidos.append(id[0])
 
     return pedidos_que_salen, lista_id_pedidos
 
 
-def escribir_txt(datos:list) -> None:
+def escribir_txt(datos:list)->None:
     if(os.path.exists("salida.txt")):
         os.remove("salida.txt")
     archivo = open('salida.txt', 'a', encoding='utf-8')
@@ -940,8 +940,6 @@ def escribir_txt(datos:list) -> None:
     archivo.close()
 
 # punto 2)
-
-
 def menu_zonas(pedidos: dict)->None:
     condicion_menu: bool = True
 
@@ -958,14 +956,14 @@ def menu_zonas(pedidos: dict)->None:
             condicion_menu = False
             continue
         else:
-            print(hacer_viaje_optimo(pedidos, str(opcion)))
+            hacer_viaje_optimo(pedidos, str(opcion))
 
 
 # --- Fin de funciones de geolocalizacion y recorrido optimo --------
 
 
-# Funciones para determinar pedidos procesados y ordenados por fecha. Opcion 4)
 
+# Funciones para determinar pedidos procesados y ordenados por fecha. Opcion 4
 
 
 
@@ -1080,9 +1078,9 @@ def listar_pedidos_rosario(pedidos_procesados : dict) -> None:
 # --------- Fin opcion 5 -------------------------------
 
 
-# opcion 6): ARTICULO MAS PEDIDO Y ARTICULOS ENTREGADOS
+# opcion 6: ARTICULO MAS PEDIDO Y ARTICULOS ENTREGADOS
 
-def articulo_mas_pedido(estado_pedidos: dict) -> dict:
+def articulo_mas_pedido(estado_pedidos: dict)->dict:
     '''
     - Recibe por parametro el diccionario donde se encuentran todos los pedidos realizados
     - Determina cual fue el articulo mas pedido
@@ -1111,8 +1109,7 @@ def articulo_mas_pedido(estado_pedidos: dict) -> dict:
     
     return articulo_mas_pedido
 
-
-def lista_pedidos_entregados(n_pedidos_entregados: dict) -> list:
+def lista_pedidos_entregados(n_pedidos_entregados: dict)->list:
     '''
     - Se recibe los N° de pedidos que se pudieron completar luego del proceso
     - de envios
@@ -1130,7 +1127,7 @@ def lista_pedidos_entregados(n_pedidos_entregados: dict) -> list:
     return pedidos_entregados
     
 
-def cantidad_entregados(articulo_mas_pedido: dict, lista_entregados: list) -> int:
+def cantidad_entregados(articulo_mas_pedido: dict, lista_entregados: list)->int:
     '''
     - Verifica cuantas unidades del articulo mas pedido se pudieron entregar
     - Retorna el resultado
@@ -1146,7 +1143,7 @@ def cantidad_entregados(articulo_mas_pedido: dict, lista_entregados: list) -> in
     return articulos_entregados
 
 
-def articulos_entregados(estado_pedidos: dict, n_pedidos_entregados) -> None:
+def articulos_entregados(estado_pedidos: dict, n_pedidos_entregados)->None:
     '''
     - Recibe 'estado_pedidos' diccionario donde se encuentran todos los pedidos realizados
     - Printea el articulo mas pedido y los que se lograron entregar
@@ -1243,15 +1240,18 @@ def main() -> None:
                 else:
                     print("No existen pedidos para procesar y listar")
             elif(int(opcion) == 4):
+                camiones, id_pedidos = hacer_camiones(diccionario_pedidos)
                 pedidos_procesados = pasar_listaCsv_dict(pedidos_procesados, id_pedidos)
                 listar_pedidos_completos(pedidos_procesados)
             elif(int(opcion) == 5):
+                camiones, id_pedidos = hacer_camiones(diccionario_pedidos)
                 pedidos_procesados = pasar_listaCsv_dict(pedidos_procesados, id_pedidos)
                 listar_pedidos_rosario(pedidos_procesados)
             elif(int(opcion) == 6):
                 if(len(estado_pedidos) > 0):
-                    # hacer_camiones(a) = lista_ids_pedidos
-                    lista_ids_pedidos: list = ['1', '2', '3', '4', '5']
+                    diccionario_pedidos = recoleccion_datos_ciudades()
+                    camiones, id_pedidos = hacer_camiones(diccionario_pedidos)
+                    camiones, lista_ids_pedidos = hacer_camiones(diccionario_pedidos)
                     articulos_entregados(estado_pedidos,lista_ids_pedidos)
                 else:
                     print("No existen pedidos para verificar la opcion solicitada")
