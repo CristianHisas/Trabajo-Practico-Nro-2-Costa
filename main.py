@@ -19,36 +19,36 @@ from geopy.geocoders import Nominatim
 '''
 
 
-def load_yolo() -> tuple:
+def cargar_yolo() -> tuple:
     '''
     - Carga de archivos yolo y coco.names
-    - Los objetos que pueden reconocerce en las imagenes los clasifico en mi lista classes
+    - Los objetos que pueden reconocerce en las imagenes los clasifico en mi lista clases
     '''
-    # Cargo los archivos yolo y coco.names
+    # Cargo la network con los archivos yolo y coco.names
     net = cv2.dnn.readNet("TP_Arch_config/yolov3.weights", "TP_Arch_config/yolov3.cfg")
-    classes: list = []
+    clases: list = []
     with open("TP_Arch_config/coco.names", "r") as f:
-        classes = [line.strip() for line in f.readlines()]
+        clases = [linea.strip() for linea in f.readlines()]
 
-    output_layers: list = [layer_name for layer_name in net.getUnconnectedOutLayersNames()]
-    colors = np.random.uniform(0, 255, size=(len(classes), 3))
+    output_layers: list = [layer_nombre for layer_nombre in net.getUnconnectedOutLayersNames()]
+    colores = np.random.uniform(0, 255, size=(len(clases), 3))
 
-    return net, classes, colors, output_layers
+    return net, clases, colores, output_layers
 
 
-def load_image(img_path: str) -> tuple:
+def cargar_imagen(img_path: str) -> tuple:
     '''
     - Procesa imagen, se re-configura su dimension y se devuelve informacion en forma de tupla
     '''
 
     img = cv2.imread(img_path)
     img = cv2.resize(img, None, fx=0.4, fy=0.4)
-    height, width, channels = img.shape
+    altura, ancho, canales = img.shape
 
-    return img, height, width
+    return img, altura, ancho
 
 
-def detect_objects(img: list, net, output_layers: list) -> list:
+def detectar_objetos(img: list, net, output_layers: list) -> list:
     '''
     - Deteccion de objetos en las imagenes
     - Se procesan y se hace una lectura de los pixeles en la imagen
@@ -62,34 +62,34 @@ def detect_objects(img: list, net, output_layers: list) -> list:
     return outputs
 
 
-def get_box_dimensions(outputs: list, height: int, width: int) -> tuple:
+def get_box_dimensiones(outputs: list, altura: int, ancho: int) -> tuple:
     '''
     - Se detectan las dimensiones del objeto para poder armar las boxes que van a recuadrar y marcar al objeto en la imagen
     - Devuelve una tupla con las dimensiones y los respectivos identificadores de los objetos
     '''
     boxes: list = []
     config: list = []
-    class_ids: list = []
+    clases_ids: list = []
     for output in outputs:
         for detect in output:
             scores: list = detect[5:]
             class_id = np.argmax(scores)
             conf: float = scores[class_id]
             if(conf > 0.3):
-                center_x: int = int(detect[0] * width)
-                center_y: int = int(detect[1] * height)
-                w: int = int(detect[2] * width)
-                h: int = int(detect[3] * height)
+                center_x: int = int(detect[0] * ancho)
+                center_y: int = int(detect[1] * altura)
+                w: int = int(detect[2] * ancho)
+                h: int = int(detect[3] * altura)
                 x: int = int(center_x - w/2)
                 y: int = int(center_y - h / 2)
                 boxes.append([x, y, w, h])
                 config.append(float(conf))
-                class_ids.append(class_id)
+                clases_ids.append(class_id)
 
-    return boxes, config, class_ids
+    return boxes, config, clases_ids
 
 
-def draw_labels(boxes: list, config: list, colors: list, class_ids: list, classes: list, img: list, fle_name: str) -> str:
+def get_labels(boxes: list, config: list, colores: list, clases_ids: list, clases: list, img: list, fle_name: str) -> str:
     '''
     - Se dibuja el marco del dibujo con el identificador
     - Muestra la imagen por 2 segundos
@@ -101,8 +101,8 @@ def draw_labels(boxes: list, config: list, colors: list, class_ids: list, classe
     for i in range(len(boxes)):
         if i in indexes:
             x, y, w, h = boxes[i]
-            label = str(classes[class_ids[i]])
-            color: list = colors[i]
+            label = str(clases[clases_ids[i]])
+            color: list = colores[i]
             cv2.rectangle(img, (x,y), (x+w, y+h), color, 2)
             cv2.putText(img, label, (x, y - 5), font, 1, color, 1)
 
@@ -120,76 +120,76 @@ def draw_labels(boxes: list, config: list, colors: list, class_ids: list, classe
 '''
 
 
-def is_green(img: list) -> bool:
+def es_verde(img: list) -> bool:
     img_hsv: list = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-    lower = np.array([45, 100, 20])
-    upper = np.array([65, 255, 255])
+    minimo = np.array([45, 100, 20])
+    maximo = np.array([65, 255, 255])
 
-    mask: list = cv2.inRange(img_hsv, lower, upper)
-    img_result: list = cv2.bitwise_and(img, img, mask=mask)
+    mask: list = cv2.inRange(img_hsv, minimo, maximo)
+    img_resultado: list = cv2.bitwise_and(img, img, mask=mask)
 
-    has_green: float = np.sum(img_result) / np.sum(img_hsv)
-    if(has_green > 0.07):
+    tiene_verde: float = np.sum(img_resultado) / np.sum(img_hsv)
+    if(tiene_verde > 0.07):
         return True
     else:
         return False
 
 
-def is_red(img: list) -> bool:
+def es_rojo(img: list) -> bool:
     img_hsv: list = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-    lower = np.array([0, 155, 20])
-    upper = np.array([10, 255, 255])
+    minimo = np.array([0, 155, 20])
+    maximo = np.array([10, 255, 255])
 
-    mask: list = cv2.inRange(img_hsv, lower, upper)
-    img_result: list = cv2.bitwise_and(img, img, mask=mask)
+    mask: list = cv2.inRange(img_hsv, minimo, maximo)
+    img_resultado: list = cv2.bitwise_and(img, img, mask=mask)
 
-    has_red: float = np.sum(img_result) / np.sum(img_hsv)
-    if(has_red > 0.07):
+    tiene_rojo: float = np.sum(img_resultado) / np.sum(img_hsv)
+    if(tiene_rojo > 0.07):
         return True
     else:
         return False
 
 
-def is_blue(img: list) -> bool:
+def es_azul(img: list) -> bool:
     img_hsv: list = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-    lower = np.array([85, 150, 20])
-    upper = np.array([120, 255, 255])
+    minimo = np.array([85, 150, 20])
+    maximo = np.array([120, 255, 255])
 
-    mask: list = cv2.inRange(img_hsv, lower, upper)
-    img_result: list = cv2.bitwise_and(img, img, mask=mask)
+    mask: list = cv2.inRange(img_hsv, minimo, maximo)
+    img_resultado: list = cv2.bitwise_and(img, img, mask=mask)
 
-    has_blue: float = np.sum(img_result) / np.sum(img_hsv)
-    if(has_blue > 0.07):
+    tiene_azul: float = np.sum(img_resultado) / np.sum(img_hsv)
+    if(tiene_azul > 0.07):
         return True
     else:
         return False
 
 
-def is_black(img: list) -> bool:
+def es_negro(img: list) -> bool:
     img_hsv: list = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-    lower = np.array([0, 0, 20])
-    upper = np.array([0, 0, 255])
+    minimo = np.array([0, 0, 20])
+    maximo = np.array([0, 0, 255])
 
-    mask: list = cv2.inRange(img_hsv, lower, upper)
-    img_result: list = cv2.bitwise_and(img, img, mask=mask)
+    mask: list = cv2.inRange(img_hsv, minimo, maximo)
+    img_resultado: list = cv2.bitwise_and(img, img, mask=mask)
 
-    has_black: float = np.sum(img_result) / np.sum(img_hsv)
-    if (has_black > 0.07):
+    tiene_negro: float = np.sum(img_resultado) / np.sum(img_hsv)
+    if (tiene_negro > 0.07):
         return True
     else:
         return False
 
 
-def is_yellow(img: list) -> bool:
+def es_amarillo(img: list) -> bool:
     img_hsv: list = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-    lower = np.array([25, 100, 20])
-    upper = np.array([30, 255, 255])
+    minimo = np.array([25, 100, 20])
+    maximo = np.array([30, 255, 255])
 
-    mask: list = cv2.inRange(img_hsv, lower, upper)
-    img_result: list = cv2.bitwise_and(img, img, mask=mask)
+    mask: list = cv2.inRange(img_hsv, minimo, maximo)
+    img_resultado: list = cv2.bitwise_and(img, img, mask=mask)
 
-    has_yellow: float = np.sum(img_result) / np.sum(img_hsv)
-    if(has_yellow > 0.07):
+    tiene_amarillo: float = np.sum(img_resultado) / np.sum(img_hsv)
+    if(tiene_amarillo > 0.07):
         return True
     else:
         return False
@@ -202,15 +202,15 @@ def get_color(img_path: str) -> str:
     '''
     img: list = cv2.imread(img_path)
 
-    if(is_green(img)):
+    if(es_verde(img)):
         return "verde"
-    elif(is_red(img)):
+    elif(es_rojo(img)):
         return "rojo"
-    elif(is_blue(img)):
+    elif(es_azul(img)):
         return "azul"
-    elif(is_yellow(img)):
+    elif(es_amarillo(img)):
         return "amarillo"
-    elif(is_black(img)):
+    elif(es_negro(img)):
         return "negro"
 
 
@@ -229,16 +229,22 @@ def actualizar_stock(productos: dict, color: str, clasificacion: str) -> None:
         productos[568]["color"][color] += 1
 
 
-def image_detect(img_path: str, fle_name: str, productos: dict) -> None:
+def detectar_imagen(img_path: str, fle_name: str, productos: dict) -> None:
     '''
     - Funcion que ejecuta todo el procesamiento de reconocimiento de imagenes y colores
     - Si el objeto no es un vaso o una botella, se muestra un mensaje de proceso detenido sino, se determina el color y se agrega al diccionario de stock
     '''
-    model, classes, colors, output_layers = load_yolo()
-    image, height, width = load_image(img_path)
-    outputs = detect_objects(image, model, output_layers)
-    boxes, config, class_ids = get_box_dimensions(outputs, height, width)
-    label: str = draw_labels(boxes, config, colors, class_ids, classes, image, fle_name)
+
+    # preparo el modelo pre-entrenado y los objetos que puede reconocer
+    modelo, clases, colores, output_layers = cargar_yolo()
+    # re defino las dimensiones de la imagen que quiero reconocer
+    imagen, alto, ancho = cargar_imagen(img_path)
+    # recibo la informacion de la imagen procesadada con el objeto detectado
+    outputs = detectar_objetos(imagen, modelo, output_layers)
+    # segun el objeto detectado defino la forma de la box que va a recuadrar al objeto detectado
+    boxes, config, clases_ids = get_box_dimensiones(outputs, alto, ancho)
+    # defino el color de la box, le agrego el label y muestro imagen en pantalla
+    label: str = get_labels(boxes, config, colores, clases_ids, clases, imagen, fle_name)
 
     if(label.lower() != "bottle" and label.lower() != "cup"):
         print("PROCESO DETENIDO, se reanuda en 1 minuto")
@@ -252,7 +258,7 @@ def categorizar_archivos(productos: dict, productos_archivos: list) -> None:
     - Se recorre las imagenes para detectar los objetos dentro de ellas
     '''
     for i in range(len(productos_archivos)):
-        image_detect(f"TP_Arch_config/Lote0001/{productos_archivos[i]}", productos_archivos[i], productos)
+        detectar_imagen(f"TP_Arch_config/Lote0001/{productos_archivos[i]}", productos_archivos[i], productos)
 
 
 def recuperar_productos() -> list:
@@ -301,7 +307,7 @@ def listar_pedidos_csv() -> list:
     '''
     pedidos: list = []
 
-    with open('pedidos.csv', 'r',encoding='UTF-8') as f:
+    with open('pedidos.csv', 'r', encoding='UTF-8') as f:
         reader = csv.reader(f)
         primera_linea: bool = True
 
@@ -662,7 +668,7 @@ def actualizar_csv(estado_pedidos: dict) -> None:
     # ordeno por numero de pedido antes de escribir el csv
     pedidos_validados.sort(key=lambda x: int(x[0]))
 
-    with open('pedidos.csv', 'w', newline='',encoding='UTF-8') as f:
+    with open('pedidos.csv', 'w', newline='', encoding='UTF-8') as f:
         writer = csv.writer(f)
         writer.writerow(header)
         writer.writerows(pedidos_validados)
@@ -1018,7 +1024,7 @@ def pasar_listaCsv_dict(pedidos_procesados : dict, lista_ids_pedidos : dict) -> 
 
     return pedidos_procesados
 
-def listar_pedidos_completos(pedidos_procesados : dict) -> None:
+def listar_pedidos_completos(pedidos_procesados : dict)->None:
     pedidos_fechas_separada : dict = {}
     pedidos_terminados : dict = {}
     
@@ -1038,7 +1044,7 @@ def listar_pedidos_completos(pedidos_procesados : dict) -> None:
 
 # opcion 5)
 
-def pedidos_en_rosario(pedidos_procesados: dict) -> dict:
+def pedidos_en_rosario(pedidos_procesados: dict)->dict:
     pedidos_rosario : dict = {}
     ciudad: str = ""
     valor_total: int = 0
@@ -1058,9 +1064,9 @@ def pedidos_en_rosario(pedidos_procesados: dict) -> dict:
 
     return pedidos_rosario
 
-def listar_pedidos_rosario(pedidos_procesados : dict) -> None:
-    pedidos_rosario : dict = {}
-    pedidos_rosario = pedidos_en_rosario(pedidos_procesados, pedidos_rosario)
+
+def listar_pedidos_rosario(pedidos_procesados : dict)->None:
+    pedidos_rosario: dict = pedidos_en_rosario(pedidos_procesados)
 
     if (len(pedidos_rosario) > 0):
         print("|||PEDIDOS EN ROSARIO|||")
