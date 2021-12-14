@@ -889,6 +889,7 @@ def hacer_viaje_optimo(dict_pedidos:dict,opcion: str)->None:
         if(zona_sur_ciudades == []):
             print('No hay pedidos en esta zona')
         else:
+            print("Recorrido de zonas optimizado: ")
             print(zona_sur_ciudades)
 
 
@@ -931,7 +932,7 @@ def hacer_camiones(dict_pedidos: dict)->tuple:
         for datos_camion_que_sale in pedidos_que_salen:
             if(id[1][0] in datos_camion_que_sale[3]):
                 lista_id_pedidos.append(id[0])
-    input('\nPulse ENTER para vovler al menú')
+    input('\nPulse ENTER para continuar')
 
     return pedidos_que_salen, lista_id_pedidos
 
@@ -954,6 +955,9 @@ def escribir_txt(datos:list)->None:
             archivo.write('\n')
 
     archivo.close()
+
+    input("Archivo salida.txt creado. Pulse ENTER para continuar")
+
 
 # punto 2)
 def menu_zonas(pedidos: dict)->None:
@@ -1203,6 +1207,8 @@ def generar_archivos_productos(productos: dict)->None:
         archivo_vasos.write(f"{nombre_color.capitalize()}: {valor_color} \n")
     archivo_vasos.close()
 
+    input("Archivo vasos.txt y botellas.txt creados correctamente. Pulse ENTER para continuar")
+
 
 def main()->None:
     condicion_menu: bool = True
@@ -1268,9 +1274,8 @@ def main()->None:
             elif(int(opcion) == 6):
                 if(len(estado_pedidos) > 0):
                     diccionario_pedidos = recoleccion_datos_ciudades()
-                    camiones, id_pedidos = hacer_camiones(diccionario_pedidos)
                     camiones, lista_ids_pedidos = hacer_camiones(diccionario_pedidos)
-                    articulos_entregados(estado_pedidos,lista_ids_pedidos)
+                    articulos_entregados(estado_pedidos, lista_ids_pedidos)
                 else:
                     print("No existen pedidos para verificar la opcion solicitada")
             elif(int(opcion) == 7):
