@@ -19,7 +19,7 @@ from geopy.geocoders import Nominatim
 '''
 
 
-def cargar_yolo() -> tuple:
+def cargar_yolo()->tuple:
     '''
     - Carga de archivos yolo y coco.names
     - Los objetos que pueden reconocerce en las imagenes los clasifico en mi lista clases
@@ -36,7 +36,7 @@ def cargar_yolo() -> tuple:
     return net, clases, colores, output_layers
 
 
-def cargar_imagen(img_path: str) -> tuple:
+def cargar_imagen(img_path: str)->tuple:
     '''
     - Procesa imagen, se re-configura su dimension y se devuelve informacion en forma de tupla
     '''
@@ -48,7 +48,7 @@ def cargar_imagen(img_path: str) -> tuple:
     return img, altura, ancho
 
 
-def detectar_objetos(img: list, net, output_layers: list) -> list:
+def detectar_objetos(img: list, net, output_layers: list)->list:
     '''
     - Deteccion de objetos en las imagenes
     - Se procesan y se hace una lectura de los pixeles en la imagen
@@ -62,7 +62,7 @@ def detectar_objetos(img: list, net, output_layers: list) -> list:
     return outputs
 
 
-def get_box_dimensiones(outputs: list, altura: int, ancho: int) -> tuple:
+def get_box_dimensiones(outputs: list, altura: int, ancho: int)->tuple:
     '''
     - Se detectan las dimensiones del objeto para poder armar las boxes que van a recuadrar y marcar al objeto en la imagen
     - Devuelve una tupla con las dimensiones y los respectivos identificadores de los objetos
@@ -89,7 +89,7 @@ def get_box_dimensiones(outputs: list, altura: int, ancho: int) -> tuple:
     return boxes, config, clases_ids
 
 
-def get_labels(boxes: list, config: list, colores: list, clases_ids: list, clases: list, img: list, fle_name: str) -> str:
+def get_labels(boxes: list, config: list, colores: list, clases_ids: list, clases: list, img: list, fle_name: str)->str:
     '''
     - Se dibuja el marco del dibujo con el identificador
     - Muestra la imagen por 2 segundos
@@ -120,7 +120,7 @@ def get_labels(boxes: list, config: list, colores: list, clases_ids: list, clase
 '''
 
 
-def es_verde(img: list) -> bool:
+def es_verde(img: list)->bool:
     img_hsv: list = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     minimo = np.array([45, 100, 20])
     maximo = np.array([65, 255, 255])
@@ -135,7 +135,7 @@ def es_verde(img: list) -> bool:
         return False
 
 
-def es_rojo(img: list) -> bool:
+def es_rojo(img: list)->bool:
     img_hsv: list = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     minimo = np.array([0, 155, 20])
     maximo = np.array([10, 255, 255])
@@ -150,7 +150,7 @@ def es_rojo(img: list) -> bool:
         return False
 
 
-def es_azul(img: list) -> bool:
+def es_azul(img: list)->bool:
     img_hsv: list = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     minimo = np.array([85, 150, 20])
     maximo = np.array([120, 255, 255])
@@ -165,7 +165,7 @@ def es_azul(img: list) -> bool:
         return False
 
 
-def es_negro(img: list) -> bool:
+def es_negro(img: list)->bool:
     img_hsv: list = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     minimo = np.array([0, 0, 20])
     maximo = np.array([0, 0, 255])
@@ -180,7 +180,7 @@ def es_negro(img: list) -> bool:
         return False
 
 
-def es_amarillo(img: list) -> bool:
+def es_amarillo(img: list)->bool:
     img_hsv: list = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     minimo = np.array([25, 100, 20])
     maximo = np.array([30, 255, 255])
@@ -195,7 +195,7 @@ def es_amarillo(img: list) -> bool:
         return False
 
 
-def get_color(img_path: str) -> str:
+def get_color(img_path: str)->str:
     '''
     - Funcion que ejecuta el proceso de reconocimiento de color en una imagen recibida por parametros
     - Retorna el color de la imagen detectada
@@ -217,7 +217,7 @@ def get_color(img_path: str) -> str:
 # ---------- Fin de funciones para detectar colores -------
 
 
-def actualizar_stock(productos: dict, color: str, clasificacion: str) -> None:
+def actualizar_stock(productos: dict, color: str, clasificacion: str)->None:
     '''
     - Actualiza el stock del color de cada objeto segun lo que reciba por parametros
     '''
@@ -229,7 +229,7 @@ def actualizar_stock(productos: dict, color: str, clasificacion: str) -> None:
         productos[568]["color"][color] += 1
 
 
-def detectar_imagen(img_path: str, fle_name: str, productos: dict) -> None:
+def detectar_imagen(img_path: str, fle_name: str, productos: dict)->None:
     '''
     - Funcion que ejecuta todo el procesamiento de reconocimiento de imagenes y colores
     - Si el objeto no es un vaso o una botella, se muestra un mensaje de proceso detenido sino, se determina el color y se agrega al diccionario de stock
@@ -253,7 +253,7 @@ def detectar_imagen(img_path: str, fle_name: str, productos: dict) -> None:
         actualizar_stock(productos, color, label.lower())
 
 
-def categorizar_archivos(productos: dict, productos_archivos: list) -> None:
+def categorizar_archivos(productos: dict, productos_archivos: list)->None:
     '''
     - Se recorre las imagenes para detectar los objetos dentro de ellas
     '''
@@ -261,14 +261,14 @@ def categorizar_archivos(productos: dict, productos_archivos: list) -> None:
         detectar_imagen(f"TP_Arch_config/Lote0001/{productos_archivos[i]}", productos_archivos[i], productos)
 
 
-def recuperar_productos() -> list:
+def recuperar_productos()->list:
     '''
     - Creo una lista con los nombres de todos los archivos dentro del lote
     '''
     return os.listdir("TP_Arch_config/Lote0001")
 
 
-def determinar_lote() -> dict:
+def determinar_lote()->dict:
     '''
     - Se recibe el diccionario de productos por parametro
     - Se crea una lista de archivos a detectar imagenes
@@ -288,11 +288,11 @@ def determinar_lote() -> dict:
 '''
 - Funciones para procesar ABM de pedidos
 '''
-def limpiar() -> None:
+def limpiar()->None:
     print('\n' * 150)
 
 
-def validar_entero(opcion_min: int, opcion_max: int, opcion: str) -> int:
+def validar_entero(opcion_min: int, opcion_max: int, opcion: str)->int:
     entero: str = input(f'ingrese {opcion}: ')
 
     while(not entero.isnumeric() or int(entero) < opcion_min or int(entero) > opcion_max):
@@ -301,7 +301,7 @@ def validar_entero(opcion_min: int, opcion_max: int, opcion: str) -> int:
     return int(entero)
 
 
-def listar_pedidos_csv() -> list:
+def listar_pedidos_csv()->list:
     '''
     - Lee los pedidos cargados en el .csv y retorna una lista con ellos
     '''
@@ -324,7 +324,7 @@ def listar_pedidos_csv() -> list:
     return pedidos
 
 
-def procesar_pedidos_csv(stock: dict) -> dict:
+def procesar_pedidos_csv(stock: dict)->dict:
     '''
     - Verifica segun el stock cuales son los pedidos que se pueden completar
     - Escribe en el .csv los pedidos que se pudieron validar 
@@ -357,7 +357,7 @@ def procesar_pedidos_csv(stock: dict) -> dict:
     return estado_pedidos
 
 
-def mostrar_pedidos_procesados(estado_pedidos: dict) -> None:
+def mostrar_pedidos_procesados(estado_pedidos: dict)->None:
     validados: list = sorted(estado_pedidos['pedidos validados'],key=lambda x: int(x[0]))
     cancelados: list = sorted(estado_pedidos['pedidos cancelados'],key=lambda x: int(x[0]))
     header: str = ' Pedido     Fecha        Cliente         Datos de envio '
@@ -383,7 +383,7 @@ def mostrar_pedidos_procesados(estado_pedidos: dict) -> None:
     input('\nIngrese ENTER para ver el menu ')
 
 
-def ultimo_numero_pedido(estado_pedidos: dict) -> int:
+def ultimo_numero_pedido(estado_pedidos: dict)->int:
     '''
     - Recibe por parametro los pedidos que se realizaron hasta el momento
     - Determina cual es el ultimo numero de pedido realizado y lo retorna
@@ -400,7 +400,7 @@ def ultimo_numero_pedido(estado_pedidos: dict) -> int:
     return ultimo_pedido
 
 
-def validar_str(opcion) -> str:
+def validar_str(opcion)->str:
     ingrese_str: str = input(f'Ingrese {opcion}: ')
 
     while(type(ingrese_str) != str or ingrese_str == '' or ingrese_str.isdigit()):
@@ -409,7 +409,7 @@ def validar_str(opcion) -> str:
     return ingrese_str
 
 
-def validar_codigo_producto() -> int:
+def validar_codigo_producto()->int:
     codigo: str = input('Ingrese el codigo de producto: ')
     codigos: list = ['1334', '568']
 
@@ -419,7 +419,7 @@ def validar_codigo_producto() -> int:
     return int(codigo)
 
 
-def validar_color_producto(cod_producto: int) -> str:
+def validar_color_producto(cod_producto: int)->str:
     color: str = input('Ingrese el color del producto: ')
     colores: dict = {1334: ['rojo', 'azul', 'verde', 'negro', 'amarillo'],
                      568: ['negro', 'azul']}
@@ -430,7 +430,7 @@ def validar_color_producto(cod_producto: int) -> str:
     return color.lower()
 
 
-def mostrar_stock(stock: dict, cod_articulo: int) -> None:
+def mostrar_stock(stock: dict, cod_articulo: int)->None:
     limpiar()
     if(cod_articulo == 1334):
         print(f"""\n\n      STOCK BOTELLAS      
@@ -447,7 +447,7 @@ def mostrar_stock(stock: dict, cod_articulo: int) -> None:
   NEGRO: {stock[568]['color']['negro']}""")
 
 
-def validar_color_stock(stock: dict, cod_articulo: int) -> tuple:
+def validar_color_stock(stock: dict, cod_articulo: int)->tuple:
     '''
     - Pide ingresar color y cantidad y valida si esta disponible esa cantidad en stock-
     '''
@@ -464,7 +464,7 @@ def validar_color_stock(stock: dict, cod_articulo: int) -> tuple:
     return color, cantidad
 
 
-def ingresar_producto_a_pedido(stock: dict, n_pedido: str, fecha: str, cliente: str, ciudad: str, provincia: str) -> tuple:
+def ingresar_producto_a_pedido(stock: dict, n_pedido: str, fecha: str, cliente: str, ciudad: str, provincia: str)->tuple:
     '''
     - Se le pasa por parametros la informacion del pedido ya registrada anteriormente
     - Crea una lista donde se va a almacenar los datos del pedido
@@ -481,15 +481,16 @@ def ingresar_producto_a_pedido(stock: dict, n_pedido: str, fecha: str, cliente: 
     return stock,pedido
 
 
-def validar_opcion(opciones: list, opcion: str) -> str:
+def validar_opcion(opciones: list, opcion: str)->str:
     ingresar_opcion: str = input(f'Ingrese {opcion}: ')
 
     while(ingresar_opcion.lower() not in opciones):
         ingresar_opcion = input(f'{opcion} inválido/a, intente nuevamente: ')
+    
 
     return ingresar_opcion.lower()
 
-def validar_datos_envio() -> tuple:
+def validar_datos_envio()->tuple:
     '''
     - Solicita el ingreso de ciudad y provincia y con la libreria geopy
     - verifica que sean datos validos
@@ -507,11 +508,19 @@ def validar_datos_envio() -> tuple:
             print('No se pudieron validar los datos de envio, intente nuevamente. ')
             ciudad: str = validar_str('ciudad')
             provincia: str = validar_str('provincia')
+    
+    if(ciudad.lower() == 'caba'):
+        ciudad = ciudad.upper()
+    
+    else:
+        ciudad = ciudad.title()
+        
 
-    return ciudad.title(),provincia.title()
+
+    return ciudad,provincia.title()
 
 
-def ingresar_pedido(stock: dict, estado_pedidos: dict) -> tuple:
+def ingresar_pedido(stock: dict, estado_pedidos: dict)->tuple:
     ultimo_pedido: int = ultimo_numero_pedido(estado_pedidos)
 
     numero_pedido: str = str(ultimo_pedido + 1)
@@ -538,7 +547,7 @@ def ingresar_pedido(stock: dict, estado_pedidos: dict) -> tuple:
     return stock, estado_pedidos
 
 
-def remover_pedido_validado(n_pedido: int, estado_pedidos: dict) -> dict:
+def remover_pedido_validado(n_pedido: int, estado_pedidos: dict)->dict:
     '''
     - Se le pasa por parametro un numero de pedido
     - Remueve todos los articulos que contengan ese numero de pedido de estado_pedidos['pedidos validados'] 
@@ -553,7 +562,7 @@ def remover_pedido_validado(n_pedido: int, estado_pedidos: dict) -> dict:
     return estado_pedidos
 
 
-def remover_pedido_cancelado(n_pedido: int, estado_pedidos: dict) -> dict:
+def remover_pedido_cancelado(n_pedido: int, estado_pedidos: dict)->dict:
     '''
     - Se le pasa por parametro un numero de pedido
     - Remueve todos los articulos que contengan ese numero de pedido de estado_pedidos['pedidos cancelados'] 
@@ -568,7 +577,7 @@ def remover_pedido_cancelado(n_pedido: int, estado_pedidos: dict) -> dict:
     return estado_pedidos
 
 
-def rehacer_pedido(stock: dict, estado_pedidos: dict) -> tuple:
+def rehacer_pedido(stock: dict, estado_pedidos: dict)->tuple:
     '''
     - Se pide numero de pedido que desea rehacerse
     - Toma los datos del pedido ya registrados y los utiliza para ingresarle los articulos nuevos
@@ -626,7 +635,7 @@ def numero_pedidos_validados(estado_pedidos: dict)->list:
     return n_pedidos_validados
 
 
-def baja_pedido(stock: dict, estado_pedidos: dict) -> tuple:
+def baja_pedido(stock: dict, estado_pedidos: dict)->tuple:
     '''
     - Remueve el pedido de 'estado_pedido['pedidos validados]'
     - Lo almacena en 'estado_pedidos['pedidos cancelados']'
@@ -656,7 +665,7 @@ def baja_pedido(stock: dict, estado_pedidos: dict) -> tuple:
     return stock, estado_pedidos
 
 
-def actualizar_csv(estado_pedidos: dict) -> None:
+def actualizar_csv(estado_pedidos: dict)->None:
     '''
     - Funcion que al terminar la alta, baja y modificacion de pedidos
     - escribe los pedidos que se pudieron validar en el .csv
@@ -674,7 +683,7 @@ def actualizar_csv(estado_pedidos: dict) -> None:
         writer.writerows(pedidos_validados)
 
 
-def inicio_ABM(productos: dict,estado_pedidos: dict) -> dict:
+def inicio_ABM(productos: dict,estado_pedidos: dict)->dict:
     '''
     - Actualiza el archivo .csv con los pedidos procesados y validados
     - retorna un dict con los pedidos validados y cancelados:
@@ -779,7 +788,7 @@ def distribucion_zonas(lista_ciudad: list)->tuple:
     zona_caba: list = []
 
     for indice in range(1, len(lista_ciudad)):
-        buscar_ciudad = geolocator.geocode(lista_ciudad[indice], country_codes='AR', timeout=15)
+        buscar_ciudad = geolocator.geocode(lista_ciudad[indice], country_codes='AR', timeout=60)
         latitud_ciudad: float = buscar_ciudad.latitude
         longitud_ciudad: float = buscar_ciudad.longitude
         lugar_coordenadas[lista_ciudad[indice]] = [latitud_ciudad, longitud_ciudad]
@@ -922,6 +931,7 @@ def hacer_camiones(dict_pedidos: dict)->tuple:
         for datos_camion_que_sale in pedidos_que_salen:
             if(id[1][0] in datos_camion_que_sale[3]):
                 lista_id_pedidos.append(id[0])
+    input('\nPulse ENTER para vovler al menú')
 
     return pedidos_que_salen, lista_id_pedidos
 
@@ -974,7 +984,7 @@ def menu_zonas(pedidos: dict)->None:
 
 
 #Ordeno los pedidos primero por dia despues por mes y por ultimo por fecha.
-def ordenar_pedidos_fecha(pedidos_separados_fecha : dict) -> dict:
+def ordenar_pedidos_fecha(pedidos_separados_fecha : dict)->dict:
     pedidos_terminados_ordenado_dia : list = []
     pedidos_terminados_ordenado_dia = sorted(pedidos_separados_fecha.items(), key = lambda x: x[1][0], reverse = False)
     dict_ordenado_dia : dict = {}
@@ -997,7 +1007,7 @@ def ordenar_pedidos_fecha(pedidos_separados_fecha : dict) -> dict:
 
 
 #crea un dict que separa las fechas "12/10/2001" --- "12","10","2001"
-def separar_fechas(pedidos_terminados : dict, pedidos_fechas_separada : dict) -> dict:
+def separar_fechas(pedidos_terminados: dict, pedidos_fechas_separada: dict)->dict:
     dia : int = 0
     mes : int = 0
     anio : int = 0
@@ -1012,7 +1022,8 @@ def separar_fechas(pedidos_terminados : dict, pedidos_fechas_separada : dict) ->
 
 
 #leo el csv y comparo con la lista de ids de pedidos completados que obtengo de la funcion hacer_camiones()
-def pasar_listaCsv_dict(pedidos_procesados : dict, lista_ids_pedidos : dict) -> dict:
+def pasar_listaCsv_dict(lista_ids_pedidos: dict)->dict:
+    pedidos_procesados: dict = {}
     lista_csv : list = []
     lista_csv = listar_pedidos_csv()
     
@@ -1024,7 +1035,7 @@ def pasar_listaCsv_dict(pedidos_procesados : dict, lista_ids_pedidos : dict) -> 
 
     return pedidos_procesados
 
-def listar_pedidos_completos(pedidos_procesados : dict)->None:
+def listar_pedidos_completos(pedidos_procesados: dict)->None:
     pedidos_fechas_separada : dict = {}
     pedidos_terminados : dict = {}
     
@@ -1045,7 +1056,7 @@ def listar_pedidos_completos(pedidos_procesados : dict)->None:
 # opcion 5)
 
 def pedidos_en_rosario(pedidos_procesados: dict)->dict:
-    pedidos_rosario : dict = {}
+    pedidos_rosario: dict = {}
     ciudad: str = ""
     valor_total: int = 0
     for numero, pedidos in pedidos_procesados.items():
@@ -1064,8 +1075,7 @@ def pedidos_en_rosario(pedidos_procesados: dict)->dict:
 
     return pedidos_rosario
 
-
-def listar_pedidos_rosario(pedidos_procesados : dict)->None:
+def listar_pedidos_rosario(pedidos_procesados : dict)->None:  
     pedidos_rosario: dict = pedidos_en_rosario(pedidos_procesados)
 
     if (len(pedidos_rosario) > 0):
@@ -1172,7 +1182,7 @@ def articulos_entregados(estado_pedidos: dict, n_pedidos_entregados)->None:
 
 
 # opcion 7)
-def generar_archivos_productos(productos: dict) -> None:
+def generar_archivos_productos(productos: dict)->None:
     '''
     Se crean archivos botellas.txt y vasos.txt
     '''
@@ -1194,7 +1204,7 @@ def generar_archivos_productos(productos: dict) -> None:
     archivo_vasos.close()
 
 
-def main() -> None:
+def main()->None:
     condicion_menu: bool = True
 
     print("Inicio de proceso para Lote 0001")
@@ -1246,12 +1256,14 @@ def main() -> None:
                 else:
                     print("No existen pedidos para procesar y listar")
             elif(int(opcion) == 4):
+                diccionario_pedidos = recoleccion_datos_ciudades()
                 camiones, id_pedidos = hacer_camiones(diccionario_pedidos)
-                pedidos_procesados = pasar_listaCsv_dict(pedidos_procesados, id_pedidos)
+                pedidos_procesados = pasar_listaCsv_dict(id_pedidos)
                 listar_pedidos_completos(pedidos_procesados)
             elif(int(opcion) == 5):
+                diccionario_pedidos = recoleccion_datos_ciudades()
                 camiones, id_pedidos = hacer_camiones(diccionario_pedidos)
-                pedidos_procesados = pasar_listaCsv_dict(pedidos_procesados, id_pedidos)
+                pedidos_procesados = pasar_listaCsv_dict(id_pedidos)
                 listar_pedidos_rosario(pedidos_procesados)
             elif(int(opcion) == 6):
                 if(len(estado_pedidos) > 0):
@@ -1265,7 +1277,7 @@ def main() -> None:
                 generar_archivos_productos(diccionario_productos)
             else:
                 condicion_menu = False
-
-        print("Fin del programa")
+                print("Fin del programa")
+        
 
 main()
